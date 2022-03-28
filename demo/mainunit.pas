@@ -40,8 +40,17 @@ uses
 // Type Definitions
 //***************************************************************************************
 type
-  //------------------------------ TMainForm --------------------------------------------
+  { TMainForm }
   TMainForm = class(TForm)
+    BtnConnect: TButton;
+    BtnDisconnect: TButton;
+    BtnList: TButton;
+    BtnTransmit: TButton;
+    MmoLog: TMemo;
+    procedure BtnConnectClick(Sender: TObject);
+    procedure BtnDisconnectClick(Sender: TObject);
+    procedure BtnListClick(Sender: TObject);
+    procedure BtnTransmitClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
@@ -75,6 +84,104 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FCanContext := CanCommNew;
 end; //*** end of FormCreate ***
+
+
+//***************************************************************************************
+// NAME:           BtnConnectClick
+// PARAMETER:      Sender Source of the event.
+// RETURN VALUE:   none
+// DESCRIPTION:    Button click event handler.
+//
+//***************************************************************************************
+procedure TMainForm.BtnConnectClick(Sender: TObject);
+begin
+  if CanCommConnect(FCanContext, PAnsiChar(AnsiString('vcan0'))) = CANCOMM_TRUE then
+  begin
+    MmoLog.Lines.Add('Connected to CAN device');
+  end
+  else
+  begin
+    MmoLog.Lines.Add('[ERROR] Could not connect to CAN device');
+  end;
+end; //*** end of BtnConnectClick ***
+
+
+//***************************************************************************************
+// NAME:           BtnDisconnectClick
+// PARAMETER:      Sender Source of the event.
+// RETURN VALUE:   none
+// DESCRIPTION:    Button click event handler.
+//
+//***************************************************************************************
+procedure TMainForm.BtnDisconnectClick(Sender: TObject);
+begin
+  CanCommDisconnect(FCanContext);
+  MmoLog.Lines.Add('Disconnected from CAN device');
+end; //*** end of BtnDisconnectClick ***
+
+
+//***************************************************************************************
+// NAME:           BtnListClick
+// PARAMETER:      Sender Source of the event.
+// RETURN VALUE:   none
+// DESCRIPTION:    Button click event handler.
+//
+//***************************************************************************************
+procedure TMainForm.BtnListClick(Sender: TObject);
+var
+  DeviceCount: Byte;
+  DeviceIndex: Byte;
+  DeviceName: PAnsiChar;
+begin
+  DeviceCount := CanCommDevicesBuildList(FCanContext);
+  MmoLog.Lines.Add(Format('Number of CAN devices: %d',[DeviceCount]));
+  for DeviceIndex := 0 to (DeviceCount - 1) do
+  begin
+    DeviceName := CanCommDevicesName(FCanContext, DeviceIndex);
+    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex + 1, StrPas(DeviceName)]));
+  end;
+end; //*** end of BtnListClick ***
+
+
+//***************************************************************************************
+// NAME:           BtnTransmitClick
+// PARAMETER:      Sender Source of the event.
+// RETURN VALUE:   none
+// DESCRIPTION:    Button click event handler.
+//
+//***************************************************************************************
+procedure TMainForm.BtnTransmitClick(Sender: TObject);
+var
+  Id: LongWord;
+  Ext: Byte;
+  Len: Byte;
+  Data: Array [0..7] of Byte;
+  Flags: Byte;
+  Timestamp: QWord;
+begin
+  Id := $123;
+  Ext := CANCOMM_FALSE;
+  Len := 8;
+  Flags := 0;
+  Timestamp := 0;
+  Data[0] := 1;
+  Data[1] := 2;
+  Data[2] := 3;
+  Data[3] := 4;
+  Data[4] := 5;
+  Data[5] := 6;
+  Data[6] := 7;
+  Data[7] := 8;
+
+  if (CanCommTransmit(FCanContext, Id, Ext, Len, @Data[0], Flags, @Timestamp)) = CANCOMM_TRUE then
+  begin
+    MmoLog.Lines.Add('Transmitted CAN message');
+  end
+  else
+  begin
+    MmoLog.Lines.Add('[ERROR] Could not transmit CAN message');
+  end;
+end; //*** end of BtnTransmitClick ***
 
 
 //***************************************************************************************

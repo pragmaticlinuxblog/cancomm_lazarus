@@ -1,10 +1,56 @@
 object MainForm: TMainForm
-  Left = 509
+  Left = 1016
   Height = 262
-  Top = 232
-  Width = 422
+  Top = 292
+  Width = 390
   Caption = 'SocketCanDemo'
+  ClientHeight = 262
+  ClientWidth = 390
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '2.2.0.4'
+  object BtnConnect: TButton
+    Left = 8
+    Height = 25
+    Top = 16
+    Width = 83
+    Caption = 'Connect'
+    OnClick = BtnConnectClick
+    TabOrder = 0
+  end
+  object BtnDisconnect: TButton
+    Left = 104
+    Height = 25
+    Top = 16
+    Width = 83
+    Caption = 'Disconnect'
+    OnClick = BtnDisconnectClick
+    TabOrder = 1
+  end
+  object MmoLog: TMemo
+    Left = 0
+    Height = 178
+    Top = 84
+    Width = 390
+    Align = alBottom
+    TabOrder = 2
+  end
+  object BtnList: TButton
+    Left = 200
+    Height = 25
+    Top = 16
+    Width = 83
+    Caption = 'List'
+    OnClick = BtnListClick
+    TabOrder = 3
+  end
+  object BtnTransmit: TButton
+    Left = 296
+    Height = 25
+    Top = 16
+    Width = 83
+    Caption = 'Transmit'
+    OnClick = BtnTransmitClick
+    TabOrder = 4
+  end
 end

@@ -64,11 +64,13 @@ type
 //***************************************************************************************
 //***************************************************************************************
 // NAME:           CanCommNew
-// RETURN VALUE:   none
-// DESCRIPTION:    Newly created context, if successful. nil otherwise.
+// RETURN VALUE:   Newly created context, if successful. nil otherwise.
+// DESCRIPTION:    Creates a new CAN communication context. All subsequent library
+//                 functions need this context.
 //
 //***************************************************************************************
-function CanCommNew: TCanComm; cdecl; external CANCOMM_LIBNAME name 'cancomm_new';
+function CanCommNew: TCanComm;
+         cdecl; external CANCOMM_LIBNAME name 'cancomm_new';
 
 
 //***************************************************************************************
@@ -79,10 +81,102 @@ function CanCommNew: TCanComm; cdecl; external CANCOMM_LIBNAME name 'cancomm_new
 //                 it.
 //
 //***************************************************************************************
-procedure CanCommFree(Context: TCanComm); cdecl; external CANCOMM_LIBNAME name 'cancomm_free';
+procedure CanCommFree(Context: TCanComm);
+          cdecl; external CANCOMM_LIBNAME name 'cancomm_free';
+
+
+//***************************************************************************************
+// NAME:           CanCommConnect
+// PARAMETER:      Context CAN communication context.
+//                 Device Null terminated string with the SocketCAN device name, e.g.
+//                 PAnsiChar(AnsiString('can0'))
+// RETURN VALUE:   CANCOMM_TRUE if successfully connected to the SocketCAN device.
+//                 CANCOMM_FALSE otherwise.
+// DESCRIPTION:    Connects to the specified SocketCAN device. Note that you can use the
+//                 functions cancomm_devices_buildlist() and cancomm_devices_name() to
+//                 determine the names of the SocketCAN devices known to the system.
+//                 Alternatively, you can run command "ip addr" in the terminal to find
+//                 out about the SocketCAN devices know to the system.
+//                 This function automatically figures out if the SocketCAN device
+//                 supports CAN FD, in addition to CAN classic.
+//
+//***************************************************************************************
+function CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
+         cdecl; external CANCOMM_LIBNAME name 'cancomm_connect';
+
+
+//***************************************************************************************
+// NAME:           CanCommDisconnect
+// PARAMETER:      Context CAN communication context.
+// DESCRIPTION:    Disconnects from the SocketCAN device.
+//
+//***************************************************************************************
+procedure CanCommDisconnect(Context: TCanComm);
+          cdecl; external CANCOMM_LIBNAME name 'cancomm_disconnect';
+
+
+//***************************************************************************************
+// NAME:           CanCommTransmit
+// PARAMETER:      Context CAN communication context.
+//                 Id CAN message identifier.
+//                 Ext CANCOMM_FALSE for an 11-bit message identifier, CANCOMM_TRUE for
+//                 29-bit.
+//                 Len Number of CAN message data bytes.
+//                 Data Pointer to array with data bytes.
+//                 Flags Bit flags for providing additional information about how to
+//                       transmit the message:
+//                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
+//                                                  classic. Ignored for non CAN FD
+//                                                  SocketCAN devices.
+//                 Timestamp Pointer to where the timestamp (microseconds) of the message
+//                 is stored.
+// RETURN VALUE:   CANCOMM_TRUE if successfully submitted the message for transmission.
+//                 CANCOMM_FALSE otherwise.
+// DESCRIPTION:    Submits a CAN message for transmission..
+//
+//***************************************************************************************
+function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
+                         Data: PByte; Flags: Byte; Timestamp: PQWord): Byte;
+         cdecl; external CANCOMM_LIBNAME name 'cancomm_transmit';
+
+
+// TODO cancomm_receive
+
+
+//***************************************************************************************
+// NAME:           CanCommDevicesBuildlist
+// PARAMETER:      Context CAN communication context.
+// RETURN VALUE:   The total number of CAN devices currently present on the system, or 0
+//                 if none were found or in case of an error.
+// DESCRIPTION:    Builds a list with all the CAN device names currently present on the
+//                 system. Basically an internal array with strings such as can0, vcan0,
+//                 etc. Afterwards, you can call CanCommDevicesName() to retrieve the
+//                 name of a specific SocketCAN device, using its array index.
+//
+//***************************************************************************************
+function CanCommDevicesBuildList(Context: TCanComm): Byte;
+         cdecl; external CANCOMM_LIBNAME name 'cancomm_devices_buildlist';
+
+
+//***************************************************************************************
+// NAME:           CanCommDevicesName
+// PARAMETER:      Context CAN communication context.
+//                 Index Zero based index into the device list.
+// RETURN VALUE:   The CAN device name at the specified index, or nil in case of an
+//                 error. Note that you can use StrPas() to convert the value to a
+//                 string.
+// DESCRIPTION:    Obtains the CAN device name at the specified index of the internal
+//                 list with CAN devices, created by function CanCommDevicesBuildList().
+//                 You could use this CAN device name when calling CanCommConnect().
+// ATTENTION:      Call CanCommDevicesBuildList() prior to calling this function.
+//
+//***************************************************************************************
+function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
+         cdecl; external CANCOMM_LIBNAME name 'cancomm_devices_name';
 
 
 implementation
+
 
 end.
 //******************************** end of cancomm.pas ***********************************
