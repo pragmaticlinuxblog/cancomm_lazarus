@@ -1,0 +1,10 @@
+object MainForm: TMainForm
+  Left = 509
+  Height = 262
+  Top = 232
+  Width = 422
+  Caption = 'SocketCanDemo'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  LCLVersion = '2.2.0.4'
+end
