@@ -33,8 +33,8 @@ interface
 // Includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, CanComm, StdCtrls,
-  ExtCtrls;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  CanComm, CanMsg;
 
 
 //***************************************************************************************
@@ -68,6 +68,7 @@ type
 //***************************************************************************************
 var
   MainForm: TMainForm;
+
 
 implementation
 
