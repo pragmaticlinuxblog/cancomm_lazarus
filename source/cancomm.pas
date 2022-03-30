@@ -122,25 +122,48 @@ procedure CanCommDisconnect(Context: TCanComm);
 //                 Ext CANCOMM_FALSE for an 11-bit message identifier, CANCOMM_TRUE for
 //                 29-bit.
 //                 Len Number of CAN message data bytes.
-//                 Data Pointer to array with data bytes.
+//                 PData Pointer to array with data bytes.
 //                 Flags Bit flags for providing additional information about how to
 //                       transmit the message:
 //                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
 //                                                  classic. Ignored for non CAN FD
 //                                                  SocketCAN devices.
-//                 Timestamp Pointer to where the timestamp (microseconds) of the message
-//                 is stored.
+//                 PTimestamp Pointer to where the timestamp (microseconds) of the
+//                 message is stored.
 // RETURN VALUE:   CANCOMM_TRUE if successfully submitted the message for transmission.
 //                 CANCOMM_FALSE otherwise.
-// DESCRIPTION:    Submits a CAN message for transmission..
+// DESCRIPTION:    Submits a CAN message for transmission.
 //
 //***************************************************************************************
 function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
-                         Data: PByte; Flags: Byte; Timestamp: PQWord): Byte;
+                         PData: PByte; Flags: Byte; PTimestamp: PQWord): Byte;
          cdecl; external CANCOMM_LIBNAME name 'cancomm_transmit';
 
 
-// TODO cancomm_receive
+//***************************************************************************************
+// NAME:           CanCommReceive
+// PARAMETER:      Context CAN communication context.
+//                 PId Pointer to where the CAN message identifier is stored.
+//                 PExt Pointer to where the CAN identifier type is stored. CANCOMM_FALSE
+//                 for an 11-bit message identifier, CANCOMM_TRUE for 29-bit.
+//                 PLen Pointer to where the number of CAN message data bytes is stored.
+//                 PData Pointer to array where the data bytes are stored.
+//                 PFlags Pointer to where the bit flags are stored for providing
+//                 additional information about the received message:
+//                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
+//                                                  classic.
+//                         CANCOMM_FLAG_CANERR_MSG - The message is a CAN error frame.
+//                 PTimestamp Pointer to where the timestamp (microseconds) of the
+//                 message is stored.
+// RETURN VALUE:   CANCOMM_TRUE if a new message was received and copied. CANCOMM_FALSE
+//                 otherwise.
+// DESCRIPTION:    Reads a possibly received CAN message or CAN eror frame in a
+//                 non-blocking manner.
+//
+//***************************************************************************************
+function CanCommReceive(Context: TCanComm; PId: PLongWord; PExt: PByte; PLen: PByte;
+                        PData: PByte; PFlags: PByte; PTimestamp: PQWord): Byte;
+         cdecl; external CANCOMM_LIBNAME name 'cancomm_receive';
 
 
 //***************************************************************************************
