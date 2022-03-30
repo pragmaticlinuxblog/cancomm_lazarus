@@ -33,7 +33,8 @@ interface
 // Includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, CanComm, StdCtrls;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, CanComm, StdCtrls,
+  ExtCtrls;
 
 
 //***************************************************************************************
@@ -47,12 +48,14 @@ type
     BtnList: TButton;
     BtnTransmit: TButton;
     MmoLog: TMemo;
+    RxTimer: TTimer;
     procedure BtnConnectClick(Sender: TObject);
     procedure BtnDisconnectClick(Sender: TObject);
     procedure BtnListClick(Sender: TObject);
     procedure BtnTransmitClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure RxTimerTimer(Sender: TObject);
   private
     FCanContext: TCanComm;
   public
@@ -97,6 +100,7 @@ procedure TMainForm.BtnConnectClick(Sender: TObject);
 begin
   if CanCommConnect(FCanContext, PAnsiChar(AnsiString('vcan0'))) = CANCOMM_TRUE then
   begin
+    RxTimer.Enabled := True;
     MmoLog.Lines.Add('Connected to CAN device');
   end
   else
@@ -116,6 +120,7 @@ end; //*** end of BtnConnectClick ***
 procedure TMainForm.BtnDisconnectClick(Sender: TObject);
 begin
   CanCommDisconnect(FCanContext);
+  RxTimer.Enabled := False;
   MmoLog.Lines.Add('Disconnected from CAN device');
 end; //*** end of BtnDisconnectClick ***
 
@@ -135,10 +140,10 @@ var
 begin
   DeviceCount := CanCommDevicesBuildList(FCanContext);
   MmoLog.Lines.Add(Format('Number of CAN devices: %d',[DeviceCount]));
-  for DeviceIndex := 0 to (DeviceCount - 1) do
+  for DeviceIndex := 1 to DeviceCount do
   begin
-    DeviceName := CanCommDevicesName(FCanContext, DeviceIndex);
-    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex + 1, StrPas(DeviceName)]));
+    DeviceName := CanCommDevicesName(FCanContext, DeviceIndex - 1);
+    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, StrPas(DeviceName)]));
   end;
 end; //*** end of BtnListClick ***
 
@@ -152,27 +157,13 @@ end; //*** end of BtnListClick ***
 //***************************************************************************************
 procedure TMainForm.BtnTransmitClick(Sender: TObject);
 var
-  Id: LongWord;
-  Ext: Byte;
-  Len: Byte;
-  Data: Array [0..7] of Byte;
-  Flags: Byte;
-  Timestamp: QWord;
+  Id: LongWord = $123;
+  Ext: Byte = CANCOMM_FALSE;
+  Len: Byte = 8;
+  Data: Array [0..7] of Byte = (1, 2, 3, 4, 5, 6, 7, 8);
+  Flags: Byte = 0;
+  Timestamp: QWord = 0;
 begin
-  Id := $123;
-  Ext := CANCOMM_FALSE;
-  Len := 8;
-  Flags := 0;
-  Timestamp := 0;
-  Data[0] := 1;
-  Data[1] := 2;
-  Data[2] := 3;
-  Data[3] := 4;
-  Data[4] := 5;
-  Data[5] := 6;
-  Data[6] := 7;
-  Data[7] := 8;
-
   if (CanCommTransmit(FCanContext, Id, Ext, Len, @Data[0], Flags, @Timestamp)) = CANCOMM_TRUE then
   begin
     MmoLog.Lines.Add('Transmitted CAN message');
@@ -195,6 +186,29 @@ procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   CanCommFree(FCanContext);
 end; //*** end of FormDestroy ***
+
+
+//***************************************************************************************
+// NAME:           RxTimerTimer
+// PARAMETER:      Sender Source of the event.
+// RETURN VALUE:   none
+// DESCRIPTION:    Timer event handler.
+//
+//***************************************************************************************
+procedure TMainForm.RxTimerTimer(Sender: TObject);
+var
+  Id: LongWord;
+  Ext: Byte;
+  Len: Byte;
+  Data: Array [0..63] of Byte;
+  Flags: Byte;
+  Timestamp: QWord;
+begin
+  if (CanCommReceive(FCanContext, @Id, @Ext, @Len, @Data[0], @Flags, @Timestamp)) = CANCOMM_TRUE then
+  begin
+    MmoLog.Lines.Add('Message received');
+  end;
+end; //*** end of RxTimerTimer ***/
 
 end.
 //******************************** end of mainunit.pas **********************************

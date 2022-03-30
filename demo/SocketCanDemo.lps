@@ -1,152 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="12"/>
+    <Version Value="11"/>
     <BuildModes Active="Default"/>
-    <Units>
-      <Unit>
+    <Units Count="3">
+      <Unit0>
         <Filename Value="SocketCanDemo.lpr"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <CursorPos X="54" Y="14"/>
-        <UsageCount Value="24"/>
-      </Unit>
-      <Unit>
+        <CursorPos X="37" Y="19"/>
+        <UsageCount Value="20"/>
+      </Unit0>
+      <Unit1>
         <Filename Value="mainunit.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainUnit"/>
-        <TopLine Value="140"/>
-        <CursorPos Y="44"/>
-        <UsageCount Value="24"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="156"/>
+        <CursorPos Y="167"/>
+        <UsageCount Value="20"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
-      </Unit>
-      <Unit>
+      </Unit1>
+      <Unit2>
         <Filename Value="../source/cancomm.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="113"/>
-        <CursorPos X="85" Y="123"/>
-        <UsageCount Value="24"/>
+        <TopLine Value="128"/>
+        <CursorPos Y="166"/>
+        <UsageCount Value="20"/>
         <Loaded Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="/usr/share/fpcsrc/rtl/objpas/sysutils/syspchh.inc"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="10" Y="38"/>
-        <UsageCount Value="10"/>
-      </Unit>
+      </Unit2>
     </Units>
-    <JumpHistory HistoryIndex="24">
-      <Position>
-        <Filename Value="../source/cancomm.pas"/>
-        <Caret Line="66" Column="3" TopLine="23"/>
-      </Position>
-      <Position>
-        <Filename Value="../source/cancomm.pas"/>
-        <Caret Line="63" Column="49" TopLine="23"/>
-      </Position>
-      <Position>
-        <Filename Value="../source/cancomm.pas"/>
-        <Caret Line="43" Column="22" TopLine="8"/>
-      </Position>
-      <Position>
+    <JumpHistory Count="11" HistoryIndex="10">
+      <Position1>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="10" Column="41"/>
-      </Position>
-      <Position>
+      </Position1>
+      <Position2>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="79" Column="29" TopLine="30"/>
-      </Position>
-      <Position>
+        <Caret Line="15" Column="64" TopLine="11"/>
+      </Position2>
+      <Position3>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="75" Column="25" TopLine="47"/>
-      </Position>
-      <Position>
+        <Caret Line="24" Column="51" TopLine="11"/>
+      </Position3>
+      <Position4>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="92" TopLine="47"/>
-      </Position>
-      <Position>
+        <Caret Line="135" Column="36" TopLine="124"/>
+      </Position4>
+      <Position5>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="54" Column="66" TopLine="45"/>
-      </Position>
-      <Position>
+        <Caret Line="142" Column="57" TopLine="124"/>
+      </Position5>
+      <Position6>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="41" Column="35" TopLine="11"/>
-      </Position>
-      <Position>
+        <Caret Line="143" Column="57" TopLine="125"/>
+      </Position6>
+      <Position7>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="24" Column="37" TopLine="11"/>
-      </Position>
-      <Position>
+        <Caret Line="105" Column="73" TopLine="92"/>
+      </Position7>
+      <Position8>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="17" Column="51" TopLine="11"/>
-      </Position>
-      <Position>
+        <Caret Line="221" TopLine="176"/>
+      </Position8>
+      <Position9>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="24" Column="21" TopLine="11"/>
-      </Position>
-      <Position>
+        <Caret Line="225" TopLine="178"/>
+      </Position9>
+      <Position10>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="18" Column="21" TopLine="11"/>
-      </Position>
-      <Position>
+        <Caret Line="221" Column="82" TopLine="180"/>
+      </Position10>
+      <Position11>
         <Filename Value="mainunit.pas"/>
-        <Caret Line="104" TopLine="64"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="102" Column="30" TopLine="87"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="104" Column="30" TopLine="89"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="135" Column="11" TopLine="95"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="136" Column="30" TopLine="95"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="135" Column="10" TopLine="105"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="143" Column="41" TopLine="114"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="102" Column="68" TopLine="88"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="130" Column="34" TopLine="112"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="132" Column="34" TopLine="114"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="179" Column="70" TopLine="135"/>
-      </Position>
-      <Position>
-        <Filename Value="mainunit.pas"/>
-        <Caret Line="177" Column="68" TopLine="155"/>
-      </Position>
+        <Caret Line="181" Column="82" TopLine="156"/>
+      </Position11>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes ActiveMode=""/>
+      <Modes Count="0" ActiveMode=""/>
     </RunParams>
   </ProjectSession>
 </CONFIG>

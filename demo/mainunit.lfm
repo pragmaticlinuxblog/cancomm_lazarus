@@ -8,7 +8,7 @@ object MainForm: TMainForm
   ClientWidth = 390
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '2.2.0.4'
+  LCLVersion = '2.0.12.0'
   object BtnConnect: TButton
     Left = 8
     Height = 25
@@ -29,10 +29,12 @@ object MainForm: TMainForm
   end
   object MmoLog: TMemo
     Left = 0
-    Height = 178
-    Top = 84
+    Height = 206
+    Top = 56
     Width = 390
     Align = alBottom
+    ReadOnly = True
+    ScrollBars = ssAutoVertical
     TabOrder = 2
   end
   object BtnList: TButton
@@ -52,5 +54,12 @@ object MainForm: TMainForm
     Caption = 'Transmit'
     OnClick = BtnTransmitClick
     TabOrder = 4
+  end
+  object RxTimer: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = RxTimerTimer
+    Left = 320
+    Top = 192
   end
 end
