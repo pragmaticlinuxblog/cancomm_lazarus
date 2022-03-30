@@ -203,10 +203,13 @@ var
   Data: Array [0..63] of Byte;
   Flags: Byte;
   Timestamp: QWord;
+  LogStr: String;
 begin
   if (CanCommReceive(FCanContext, @Id, @Ext, @Len, @Data[0], @Flags, @Timestamp)) = CANCOMM_TRUE then
   begin
-    MmoLog.Lines.Add('Message received');
+    LogStr := Format('Id %xh Len %d Data %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x',
+        [Id, Len, Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7]]);
+    MmoLog.Lines.Add('Received CAN message: ' + LogStr);
   end;
 end; //*** end of RxTimerTimer ***/
 

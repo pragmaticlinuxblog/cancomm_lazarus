@@ -2,10 +2,10 @@ object MainForm: TMainForm
   Left = 1016
   Height = 262
   Top = 292
-  Width = 390
+  Width = 481
   Caption = 'SocketCanDemo'
   ClientHeight = 262
-  ClientWidth = 390
+  ClientWidth = 481
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '2.0.12.0'
@@ -31,7 +31,7 @@ object MainForm: TMainForm
     Left = 0
     Height = 206
     Top = 56
-    Width = 390
+    Width = 481
     Align = alBottom
     ReadOnly = True
     ScrollBars = ssAutoVertical
