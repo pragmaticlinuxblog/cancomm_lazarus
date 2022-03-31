@@ -46,27 +46,36 @@ type
   //---------------------------------- TCanErrFrameReceivedEvent ------------------------
   TCanErrFrameReceivedEvent = procedure(Sender: TObject) of object;
 
+  //---------------------------------- TCanDevices --------------------------------------
+  TCanDevices = class(TObject)
+    private
+      FCanContext: TCanComm;
+      FCount: Integer;
+      procedure   BuildDeviceList;
+      function    GetCount: Integer;
+      function    GetDevice(Index: Integer): string;
+    public
+      constructor Create(ACanContext: TCanComm);
+      destructor  Destroy; override;
+      property    Count: Integer read GetCount;
+      property    Devices[Index: Integer]: string read GetDevice; default;
+  end;
+
   //---------------------------------- TCanDriver ---------------------------------------
   TCanDriver = class(TComponent)
-  // TODO Maybe add something to get the detected devices as a list somehow. Ideally
-  //      A property such ad Devices[Idx] and Devices.Count. Like TMemo.Lines. Look
-  //      at TStringList.
-  //      Look at https://www.freepascal.org/docs-html/rtl/classes/tstrings.html.
-  //      Might need a new class for this. Look at default value for Strings property.
-  //      I think this allows you to do [] without specifying an actual property name
-  //      as shown here: https://forum.lazarus.freepascal.org/index.php/topic,30348.msg193100.html#msg193100
   // TODO Implement reception thread. Should probably be a separate class.
   // TODO Implement register function and figure out how to add an icon.
   private
     { Private declarations }
+    FCanDevices: TCanDevices;
   protected
     { Protected declarations }
     FCanContext: TCanComm;
     FConnected : Boolean;
-    FDevice: String;
+    FDevice: string;
     FOnMsgReceived: TCanMsgReceivedEvent;
     FOnErrFrameReceived: TCanErrFrameReceivedEvent;
-    procedure SetDevice(Value: String);
+    procedure   SetDevice(Value: string);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -75,26 +84,122 @@ type
     procedure   Disconnect;
     function    Transmit(Msg: TCanMsg): Boolean;
     { Public properties }
-    property    Device: String read FDevice write SetDevice;
+    property    Device: string read FDevice write SetDevice;
     property    Connected: Boolean read FConnected;
+    property    Devices: TCanDevices read FCanDevices;
     property    OnMsgReceived: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
     property    OnErrFrameReceived: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
-end;
+  end;
 
 
 implementation
+//---------------------------------------------------------------------------------------
+//-------------------------------- TCanDevices ------------------------------------------
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+// NAME:           Create
+// PARAMETER:      ACanContext The CAN communication context that it operates on.
+// DESCRIPTION:    Object constructor. Calls TObjects's constructor and initializes
+//                 the fields their default values.
+//
+//***************************************************************************************
+constructor TCanDevices.Create(ACanContext: TCanComm);
+begin
+  // Call inherited constructor.
+  inherited Create;
+  // Store the context.
+  FCanContext := ACanContext;
+  FCount := 0;
+end; //*** end of Create ***
+
+
+//***************************************************************************************
+// NAME:           Destroy
+// DESCRIPTION:    Object destructor. Calls TObjects's destructor
+//
+//***************************************************************************************
+destructor TCanDevices.Destroy;
+begin
+  // Call inherited destructor.
+  inherited Destroy;
+end; //*** end of Destroy ***
+
+
+//***************************************************************************************
+// NAME:           BuildDeviceList
+// DESCRIPTION:    Refreshes the CAN device list inside the context.
+//
+//***************************************************************************************
+procedure TCanDevices.BuildDeviceList;
+begin
+  // Reset the device count.
+  FCount := 0;
+  // Only continue with a valid context.
+  if FCanContext <> nil then
+  begin
+    // Rebuild the list and store the total number of detected CAN devices.
+    FCount := CanCommDevicesBuildList(FCanContext);
+  end;
+end; //*** end of BuildDeviceList ***
+
+
+//***************************************************************************************
+// NAME:           GetCount
+// RETURN VALUE:   Number of detected CAN devices on the system.
+// DESCRIPTION:    Obtains the number of CAN devices detected on the system.
+//
+//***************************************************************************************
+function TCanDevices.GetCount: Integer;
+begin
+  // Build the CAN device list, which also updates FCount.
+  BuildDeviceList;
+  // Update the result.
+  Result := FCount;
+end; //*** end of GetCount ***
+
+
+//***************************************************************************************
+// NAME:           GetDevice
+// PARAMETER:      Index Zero based index into the list with CAN devices.
+// RETURN VALUE:   Name of the CAN device at the specified index.
+// DESCRIPTION:    Obtains the name of the CAN device at the specified index.
+//
+//***************************************************************************************
+function TCanDevices.GetDevice(Index: Integer): string;
+var
+  DeviceName: PAnsiChar;
+begin
+  // Initialize the result.
+  Result := '';
+  // Build the CAN device list, which also updates FCount.
+  BuildDeviceList;
+  // Only continue if the index is valid
+  if Index < FCount then
+  begin
+    // Obtain the device name.
+    DeviceName := CanCommDevicesName(FCanContext, Index);
+    // Update the result if the device name is valid.
+    if DeviceName <> nil then
+    begin
+      Result := StrPas(DeviceName);
+    end;
+  end;
+end;  //*** end of GetDevice ***
+
+
 //---------------------------------------------------------------------------------------
 //-------------------------------- TCanDriver -------------------------------------------
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 // NAME:           Create
+// PARAMETER:      AOwner Instance owner.
 // DESCRIPTION:    Component constructor. Calls TComponents's constructor and initializes
 //                 the fields their default values.
 //
 //***************************************************************************************
 constructor TCanDriver.Create(AOwner: TComponent);
 begin
-  // Call inherited constructor
+  // Call inherited constructor.
   inherited Create(AOwner);
   // Initialize fields.
   FConnected := False;
@@ -107,13 +212,13 @@ begin
   begin
     raise Exception.Create('Could not create CAN communication context');
   end;
+  // Create the CAN devices class.
+  FCanDevices := TCanDevices.Create(FCanContext);
 end; //*** end of Create ***
 
 
 //***************************************************************************************
 // NAME:           Destroy
-// PARAMETER:      none
-// RETURN VALUE:   none
 // DESCRIPTION:    Component destructor. Calls TComponent's destructor
 //
 //***************************************************************************************
@@ -126,7 +231,9 @@ begin
   begin
     CanCommFree(FCanContext);
   end;
-  // Call inherited destructor
+  // Free the CAN devices class.
+  FCanDevices.Free;
+  // Call inherited destructor.
   inherited Destroy;
 end; //*** end of Destroy ***
 
@@ -134,11 +241,10 @@ end; //*** end of Destroy ***
 //***************************************************************************************
 // NAME:           SetDevice
 // PARAMETER:      Value The device name, e.g. 'can0', 'vcan0', etc.
-// RETURN VALUE:   none
 // DESCRIPTION:    Sets the CAN device name. Automatically reconnects if needed.
 //
 //***************************************************************************************
-procedure TCanDriver.SetDevice(Value: String);
+procedure TCanDriver.SetDevice(Value: string);
 var
   WasConnected: Boolean;
 begin

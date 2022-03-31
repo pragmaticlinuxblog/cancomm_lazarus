@@ -87,7 +87,6 @@ implementation
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FCanDriver := TCanDriver.Create(Self);
-  FCanDriver.Device := 'vcan0';
 end; //*** end of FormCreate ***
 
 
@@ -100,10 +99,11 @@ end; //*** end of FormCreate ***
 //***************************************************************************************
 procedure TMainForm.BtnConnectClick(Sender: TObject);
 begin
+  FCanDriver.Device := FCanDriver.Devices[0];
   if FCanDriver.Connect then
   begin
     RxTimer.Enabled := True;
-    MmoLog.Lines.Add('Connected to CAN device');
+    MmoLog.Lines.Add(Format('Connected to CAN device %s', [FCanDriver.Device]));
   end
   else
   begin
@@ -135,18 +135,13 @@ end; //*** end of BtnDisconnectClick ***
 //
 //***************************************************************************************
 procedure TMainForm.BtnListClick(Sender: TObject);
-{var
-  DeviceCount: Byte;
-  DeviceIndex: Byte;
-  DeviceName: PAnsiChar; }
+var
+  DeviceIndex: Integer;
 begin
-  {DeviceCount := CanCommDevicesBuildList(FCanContext);
-  MmoLog.Lines.Add(Format('Number of CAN devices: %d',[DeviceCount]));
-  for DeviceIndex := 1 to DeviceCount do
+  for DeviceIndex := 1 to FCanDriver.Devices.Count do
   begin
-    DeviceName := CanCommDevicesName(FCanContext, DeviceIndex - 1);
-    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, StrPas(DeviceName)]));
-  end; }
+    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, FCanDriver.Devices[DeviceIndex-1]]));
+  end;
 end; //*** end of BtnListClick ***
 
 
