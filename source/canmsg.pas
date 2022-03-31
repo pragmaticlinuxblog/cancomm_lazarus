@@ -50,21 +50,18 @@ const
 // Type definitions
 //***************************************************************************************
 type
-  //---------------------------------- TCanMsgFlags -------------------------------------
-  // Type that groups CAN message related bit flags.
-  TCanMsgFlags = bitpacked record
-    Fd: Boolean;         // False for CAN classic, True for CAN FD frame
-    Err: Boolean;        // False for CAN data frame, True for CAN error frame
-  end;
-
   //---------------------------------- TCanMsg ------------------------------------------
   // Type that groups CAN message related information.
+  PCanMsg = ^TCanMsg;
   TCanMsg = packed record
     Id: LongWord;        // Message identifier
     Ext: Boolean;        // False for 11-bit identifier, True for 29-bit identifier
     Len: Byte;           // Number of data bytes in the message
     Data: array [0..(CANMSG_FD_MAX_DATA_LEN-1)] of Byte; // Data bytes
-    Flags: TCanMsgFlags; // Message flags
+    Flags : bitpacked record
+      Fd: Boolean;         // False for CAN classic, True for CAN FD frame
+      Err: Boolean;        // False for CAN data frame, True for CAN error frame
+    end;
     Timestamp: QWord;    // Message timestamp
   end;
 
