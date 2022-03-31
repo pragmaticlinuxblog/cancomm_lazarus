@@ -34,7 +34,7 @@ interface
 //***************************************************************************************
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  CanDriver, CanMsg, CanComm;
+  CanDriver, CanMsg;
 
 
 //***************************************************************************************

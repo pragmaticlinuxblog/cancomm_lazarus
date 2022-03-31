@@ -48,7 +48,13 @@ type
 
   //---------------------------------- TCanDriver ---------------------------------------
   TCanDriver = class(TComponent)
-  // TODO Maybe add something to get the detected devices as a list somehow.
+  // TODO Maybe add something to get the detected devices as a list somehow. Ideally
+  //      A property such ad Devices[Idx] and Devices.Count. Like TMemo.Lines. Look
+  //      at TStringList.
+  //      Look at https://www.freepascal.org/docs-html/rtl/classes/tstrings.html.
+  //      Might need a new class for this. Look at default value for Strings property.
+  //      I think this allows you to do [] without specifying an actual property name
+  //      as shown here: https://forum.lazarus.freepascal.org/index.php/topic,30348.msg193100.html#msg193100
   // TODO Implement reception thread. Should probably be a separate class.
   // TODO Implement register function and figure out how to add an icon.
   private
