@@ -59,8 +59,8 @@ type
     Len: Byte;           // Number of data bytes in the message
     Data: array [0..(CANMSG_FD_MAX_DATA_LEN-1)] of Byte; // Data bytes
     Flags : bitpacked record
-      Fd: Boolean;         // False for CAN classic, True for CAN FD frame
-      Err: Boolean;        // False for CAN data frame, True for CAN error frame
+      Fd: Boolean;       // False for CAN classic, True for CAN FD frame
+      Err: Boolean;      // False for CAN data frame, True for CAN error frame
     end;
     Timestamp: QWord;    // Message timestamp
   end;

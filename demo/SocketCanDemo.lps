@@ -7,9 +7,12 @@
       <Unit0>
         <Filename Value="SocketCanDemo.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="37" Y="19"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="19"/>
+        <CursorPos X="61" Y="56"/>
         <UsageCount Value="27"/>
+        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="mainunit.pas"/>
@@ -18,9 +21,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainUnit"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="177"/>
-        <CursorPos Y="191"/>
+        <CursorPos X="41" Y="183"/>
         <UsageCount Value="27"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -29,28 +30,27 @@
         <Filename Value="../source/cancomm.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <CursorPos X="75" Y="15"/>
         <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
+        <Filename Value="../source/candriver.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CanDriver"/>
+        <EditorIndex Value="2"/>
+        <CursorPos Y="30"/>
+        <UsageCount Value="25"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
         <Filename Value="../source/canmsg.pas"/>
         <UnitName Value="CanMsg"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="31"/>
         <CursorPos Y="67"/>
         <UsageCount Value="27"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="../source/candriver.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CanDriver"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="16"/>
-        <CursorPos X="21" Y="48"/>
-        <UsageCount Value="25"/>
-        <Loaded Value="True"/>
       </Unit4>
       <Unit5>
         <Filename Value="/usr/lib64/lazarus/lcl/stdctrls.pp"/>

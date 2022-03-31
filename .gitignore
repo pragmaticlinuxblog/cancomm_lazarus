@@ -71,3 +71,4 @@ modules/
 # Demo application build files
 lib/
 SocketCanDemo
+*.dbg
