@@ -34,7 +34,7 @@ interface
 //***************************************************************************************
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  CanDriver, CanComm;
+  CanDriver, CanMsg, CanComm;
 
 
 //***************************************************************************************
@@ -57,7 +57,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure RxTimerTimer(Sender: TObject);
   private
-    FCanContext: TCanComm;
+    FCanDriver: TCanDriver;
   public
 
   end;
@@ -86,7 +86,8 @@ implementation
 //***************************************************************************************
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  FCanContext := CanCommNew;
+  FCanDriver := TCanDriver.Create(Self);
+  FCanDriver.Device := 'vcan0';
 end; //*** end of FormCreate ***
 
 
@@ -99,7 +100,7 @@ end; //*** end of FormCreate ***
 //***************************************************************************************
 procedure TMainForm.BtnConnectClick(Sender: TObject);
 begin
-  if CanCommConnect(FCanContext, PAnsiChar(AnsiString('vcan0'))) = CANCOMM_TRUE then
+  if FCanDriver.Connect then
   begin
     RxTimer.Enabled := True;
     MmoLog.Lines.Add('Connected to CAN device');
@@ -120,7 +121,7 @@ end; //*** end of BtnConnectClick ***
 //***************************************************************************************
 procedure TMainForm.BtnDisconnectClick(Sender: TObject);
 begin
-  CanCommDisconnect(FCanContext);
+  FCanDriver.Disconnect;
   RxTimer.Enabled := False;
   MmoLog.Lines.Add('Disconnected from CAN device');
 end; //*** end of BtnDisconnectClick ***
@@ -134,18 +135,18 @@ end; //*** end of BtnDisconnectClick ***
 //
 //***************************************************************************************
 procedure TMainForm.BtnListClick(Sender: TObject);
-var
+{var
   DeviceCount: Byte;
   DeviceIndex: Byte;
-  DeviceName: PAnsiChar;
+  DeviceName: PAnsiChar; }
 begin
-  DeviceCount := CanCommDevicesBuildList(FCanContext);
+  {DeviceCount := CanCommDevicesBuildList(FCanContext);
   MmoLog.Lines.Add(Format('Number of CAN devices: %d',[DeviceCount]));
   for DeviceIndex := 1 to DeviceCount do
   begin
     DeviceName := CanCommDevicesName(FCanContext, DeviceIndex - 1);
     MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, StrPas(DeviceName)]));
-  end;
+  end; }
 end; //*** end of BtnListClick ***
 
 
@@ -158,14 +159,21 @@ end; //*** end of BtnListClick ***
 //***************************************************************************************
 procedure TMainForm.BtnTransmitClick(Sender: TObject);
 var
-  Id: LongWord = $123;
-  Ext: Byte = CANCOMM_FALSE;
-  Len: Byte = 8;
-  Data: Array [0..7] of Byte = (1, 2, 3, 4, 5, 6, 7, 8);
-  Flags: Byte = 0;
-  Timestamp: QWord = 0;
+  Msg: TCanMsg;
+  Idx: Integer;
 begin
-  if (CanCommTransmit(FCanContext, Id, Ext, Len, @Data[0], Flags, @Timestamp)) = CANCOMM_TRUE then
+  // Prepare the message.
+  Msg.Id := $123;
+  Msg.Ext := False;
+  Msg.Len := 8;
+  Msg.Flags.Fd := False;
+  Msg.Timestamp := 0;
+  for Idx := 0 to Msg.Len - 1 do
+  begin
+    Msg.Data[Idx] := Idx + 1;
+  end;
+  // Transmit the message.
+  if FCanDriver.Transmit(Msg) then
   begin
     MmoLog.Lines.Add('Transmitted CAN message');
   end
@@ -185,7 +193,7 @@ end; //*** end of BtnTransmitClick ***
 //***************************************************************************************
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
-  CanCommFree(FCanContext);
+  FCanDriver.Free;
 end; //*** end of FormDestroy ***
 
 
@@ -197,21 +205,21 @@ end; //*** end of FormDestroy ***
 //
 //***************************************************************************************
 procedure TMainForm.RxTimerTimer(Sender: TObject);
-var
+{var
   Id: LongWord;
   Ext: Byte;
   Len: Byte;
   Data: Array [0..63] of Byte;
   Flags: Byte;
   Timestamp: QWord;
-  LogStr: String;
+  LogStr: String;}
 begin
-  if (CanCommReceive(FCanContext, @Id, @Ext, @Len, @Data[0], @Flags, @Timestamp)) = CANCOMM_TRUE then
+  {if (CanCommReceive(FCanContext, @Id, @Ext, @Len, @Data[0], @Flags, @Timestamp)) = CANCOMM_TRUE then
   begin
     LogStr := Format('Id %xh Len %d Data %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x',
         [Id, Len, Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7]]);
     MmoLog.Lines.Add('Received CAN message: ' + LogStr);
-  end;
+  end; }
 end; //*** end of RxTimerTimer ***/
 
 end.
