@@ -33,20 +33,40 @@ interface
 // Global Includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, CanComm, CanMsg;
+  Classes, SysUtils, CanComm;
 
 
 //***************************************************************************************
+// Global Constant Declarations
+//***************************************************************************************
+const
+  // Maximum number of data bytes for a CAN classic message.
+  CANMSG_CLASSIC_MAX_DATA_LEN = 8;
+  // Maximum number of data bytes for a CAN FD message.
+  CANMSG_FD_MAX_DATA_LEN = 64;
+
+
+  //***************************************************************************************
 // Type definitions
 //***************************************************************************************
 type
-  //---------------------------------- TCanMsgReceivedEvent -----------------------------
-  TCanMsgReceivedEvent = procedure(Sender: TObject; Msg: TCanMsg) of object;
-
-  //---------------------------------- TCanErrFrameReceivedEvent ------------------------
-  TCanErrFrameReceivedEvent = procedure(Sender: TObject) of object;
+  //---------------------------------- TCanMsg ------------------------------------------
+  // Type that groups CAN message related information.
+  PCanMsg = ^TCanMsg;
+  TCanMsg = packed record
+    Id: LongWord;        // Message identifier
+    Ext: Boolean;        // False for 11-bit identifier, True for 29-bit identifier
+    Len: Byte;           // Number of data bytes in the message
+    Data: array [0..(CANMSG_FD_MAX_DATA_LEN-1)] of Byte; // Data bytes
+    Flags : bitpacked record
+      Fd: Boolean;         // False for CAN classic, True for CAN FD frame
+      Err: Boolean;        // False for CAN data frame, True for CAN error frame
+    end;
+    Timestamp: QWord;    // Message timestamp
+  end;
 
   //---------------------------------- TCanDevices --------------------------------------
+  // Class for convenient access to the CAN device detected on the system.
   TCanDevices = class(TObject)
     private
       FCanContext: TCanComm;
@@ -60,6 +80,14 @@ type
       property    Count: Integer read GetCount;
       property    Devices[Index: Integer]: string read GetDevice; default;
   end;
+
+  //---------------------------------- TCanMsgReceivedEvent -----------------------------
+  // Event handler type for CAN message reception.
+  TCanMsgReceivedEvent = procedure(Sender: TObject; Msg: TCanMsg) of object;
+
+  //---------------------------------- TCanErrFrameReceivedEvent ------------------------
+  // Event handler type for CAN error frame reception.
+  TCanErrFrameReceivedEvent = procedure(Sender: TObject) of object;
 
   //---------------------------------- TCanDriver ---------------------------------------
   TCanDriver = class(TComponent)

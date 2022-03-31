@@ -33,8 +33,7 @@ interface
 // Includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  CanDriver, CanMsg;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls, CanDriver;
 
 
 //***************************************************************************************
@@ -80,7 +79,6 @@ implementation
 //***************************************************************************************
 // NAME:           FormCreate
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Form constructor.
 //
 //***************************************************************************************
@@ -93,7 +91,6 @@ end; //*** end of FormCreate ***
 //***************************************************************************************
 // NAME:           BtnConnectClick
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Button click event handler.
 //
 //***************************************************************************************
@@ -115,7 +112,6 @@ end; //*** end of BtnConnectClick ***
 //***************************************************************************************
 // NAME:           BtnDisconnectClick
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Button click event handler.
 //
 //***************************************************************************************
@@ -130,7 +126,6 @@ end; //*** end of BtnDisconnectClick ***
 //***************************************************************************************
 // NAME:           BtnListClick
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Button click event handler.
 //
 //***************************************************************************************
@@ -148,7 +143,6 @@ end; //*** end of BtnListClick ***
 //***************************************************************************************
 // NAME:           BtnTransmitClick
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Button click event handler.
 //
 //***************************************************************************************
@@ -182,7 +176,6 @@ end; //*** end of BtnTransmitClick ***
 //***************************************************************************************
 // NAME:           FormDestroy
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Form destructor.
 //
 //***************************************************************************************
@@ -195,7 +188,6 @@ end; //*** end of FormDestroy ***
 //***************************************************************************************
 // NAME:           RxTimerTimer
 // PARAMETER:      Sender Source of the event.
-// RETURN VALUE:   none
 // DESCRIPTION:    Timer event handler.
 //
 //***************************************************************************************

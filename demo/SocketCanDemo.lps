@@ -19,8 +19,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainUnit"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="87"/>
-        <CursorPos X="59" Y="106"/>
+        <TopLine Value="177"/>
+        <CursorPos Y="191"/>
         <UsageCount Value="27"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -29,29 +29,26 @@
         <Filename Value="../source/cancomm.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="172"/>
-        <CursorPos X="10" Y="197"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="75" Y="15"/>
         <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="../source/canmsg.pas"/>
-        <IsPartOfProject Value="True"/>
         <UnitName Value="CanMsg"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="31"/>
-        <CursorPos X="45" Y="46"/>
+        <CursorPos Y="67"/>
         <UsageCount Value="27"/>
-        <Loaded Value="True"/>
       </Unit3>
       <Unit4>
         <Filename Value="../source/candriver.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanDriver"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="179"/>
-        <CursorPos Y="66"/>
+        <TopLine Value="16"/>
+        <CursorPos X="21" Y="48"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
       </Unit4>
