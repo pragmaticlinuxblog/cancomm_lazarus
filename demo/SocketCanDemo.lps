@@ -87,6 +87,9 @@
         <UsageCount Value="10"/>
       </Unit8>
     </Units>
+    <OtherDefines Count="1">
+      <Define0 Value="UseCThreads"/>
+    </OtherDefines>
     <JumpHistory Count="21" HistoryIndex="20">
       <Position1>
         <Filename Value="mainunit.pas"/>
