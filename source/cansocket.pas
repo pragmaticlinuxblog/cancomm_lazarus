@@ -1,7 +1,7 @@
-unit CanDriver;
+unit CanSocket;
 //***************************************************************************************
-//  Description: CAN driver unit.
-//    File Name: candriver.pas
+//  Description: CAN socket unit.
+//    File Name: cansocket.pas
 //
 //---------------------------------------------------------------------------------------
 //                          C O P Y R I G H T
@@ -66,7 +66,7 @@ type
   end;
 
   //---------------------------------- TCanDevices --------------------------------------
-  // Class for convenient access to the CAN device detected on the system.
+  // Class for convenient access to the CAN devices detected on the system.
   TCanDevices = class(TObject)
     private
       FCanContext: TCanComm;
@@ -83,14 +83,14 @@ type
 
   //---------------------------------- TCanMsgReceivedEvent -----------------------------
   // Event handler type for CAN message reception.
-  TCanMsgReceivedEvent = procedure(Sender: TObject; Msg: TCanMsg) of object;
+  TCanMsgReceivedEvent = procedure(Sender: TObject; constref Msg: TCanMsg) of object;
 
   //---------------------------------- TCanErrFrameReceivedEvent ------------------------
   // Event handler type for CAN error frame reception.
   TCanErrFrameReceivedEvent = procedure(Sender: TObject) of object;
 
-  //---------------------------------- TCanDriver ---------------------------------------
-  TCanDriver = class(TComponent)
+  //---------------------------------- TCanSocket ---------------------------------------
+  TCanSocket = class(TComponent)
   // TODO Implement reception thread. Should probably be a separate class.
   // TODO Implement register function and figure out how to add an icon.
   private
@@ -110,13 +110,13 @@ type
     destructor  Destroy; override;
     function    Connect: Boolean;
     procedure   Disconnect;
-    function    Transmit(Msg: TCanMsg): Boolean;
+    function    Transmit(var Msg: TCanMsg): Boolean;
     { Public properties }
     property    Device: string read FDevice write SetDevice;
     property    Connected: Boolean read FConnected;
     property    Devices: TCanDevices read FCanDevices;
-    property    OnMsgReceived: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
-    property    OnErrFrameReceived: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
+    property    OnMessage: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
+    property    OnErrorFrame: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
   end;
 
 
@@ -216,7 +216,7 @@ end;  //*** end of GetDevice ***
 
 
 //---------------------------------------------------------------------------------------
-//-------------------------------- TCanDriver -------------------------------------------
+//-------------------------------- TCanSocket -------------------------------------------
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 // NAME:           Create
@@ -225,7 +225,7 @@ end;  //*** end of GetDevice ***
 //                 the fields their default values.
 //
 //***************************************************************************************
-constructor TCanDriver.Create(AOwner: TComponent);
+constructor TCanSocket.Create(AOwner: TComponent);
 begin
   // Call inherited constructor.
   inherited Create(AOwner);
@@ -250,7 +250,7 @@ end; //*** end of Create ***
 // DESCRIPTION:    Component destructor. Calls TComponent's destructor
 //
 //***************************************************************************************
-destructor TCanDriver.Destroy;
+destructor TCanSocket.Destroy;
 begin
   // Make sure to disconnect.
   Disconnect;
@@ -272,7 +272,7 @@ end; //*** end of Destroy ***
 // DESCRIPTION:    Sets the CAN device name. Automatically reconnects if needed.
 //
 //***************************************************************************************
-procedure TCanDriver.SetDevice(Value: string);
+procedure TCanSocket.SetDevice(Value: string);
 var
   WasConnected: Boolean;
 begin
@@ -303,7 +303,7 @@ end; //*** end of SetDevice ***
 // DESCRIPTION:    Connects the device to the CAN bus.
 //
 //***************************************************************************************
-function TCanDriver.Connect: Boolean;
+function TCanSocket.Connect: Boolean;
 begin
   // Initialize the result.
   Result := False;
@@ -330,7 +330,7 @@ end; //*** end of Connect ***
 // DESCRIPTION:    Disconnects the device from the CAN bus.
 //
 //***************************************************************************************
-procedure TCanDriver.Disconnect;
+procedure TCanSocket.Disconnect;
 begin
   // Only continue with a valid context.
   if FCanContext <> nil then
@@ -347,12 +347,13 @@ end; //*** end of Disconnect ***
 
 //***************************************************************************************
 // NAME:           Transmit
-// PARAMETER:      msg Message to transmit.
+// PARAMETER:      Msg Message to transmit.
 // RETURN VALUE:   True if successful, False otherwise.
-// DESCRIPTION:    Submits a CAN message for transmission.
+// DESCRIPTION:    Submits a CAN message for transmission. Note that this function writes
+//                 the timestamp into the Msg parameter.
 //
 //***************************************************************************************
-function TCanDriver.Transmit(Msg: TCanMsg): Boolean;
+function TCanSocket.Transmit(var Msg: TCanMsg): Boolean;
 var
   Ext: Byte;
   Flags: Byte;
@@ -376,7 +377,7 @@ begin
     end;
     // Attempt to submit the message for transmission on the CAN bus.
     if CanCommTransmit(FCanContext, Msg.Id, Ext, Msg.Len, @Msg.Data[0], Flags,
-                       @Msg.Timestamp) = CANCOMM_TRUE then
+                       Msg.Timestamp) = CANCOMM_TRUE then
     begin
       Result := True;
     end;
@@ -385,5 +386,5 @@ end; //*** end of Transmit ***
 
 
 end.
-//******************************** end of candriver.pas *********************************
+//******************************** end of cansocket.pas *********************************
 

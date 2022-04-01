@@ -33,7 +33,7 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls, CanDriver;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls, CanSocket;
 
 
 //***************************************************************************************
@@ -56,7 +56,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure RxTimerTimer(Sender: TObject);
   private
-    FCanDriver: TCanDriver;
+    FCanSocket: TCanSocket;
   public
 
   end;
@@ -84,7 +84,7 @@ implementation
 //***************************************************************************************
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  FCanDriver := TCanDriver.Create(Self);
+  FCanSocket := TCanSocket.Create(Self);
 end; //*** end of FormCreate ***
 
 
@@ -96,11 +96,11 @@ end; //*** end of FormCreate ***
 //***************************************************************************************
 procedure TMainForm.BtnConnectClick(Sender: TObject);
 begin
-  FCanDriver.Device := FCanDriver.Devices[0];
-  if FCanDriver.Connect then
+  FCanSocket.Device := FCanSocket.Devices[0];
+  if FCanSocket.Connect then
   begin
     RxTimer.Enabled := True;
-    MmoLog.Lines.Add(Format('Connected to CAN device %s', [FCanDriver.Device]));
+    MmoLog.Lines.Add(Format('Connected to CAN device %s', [FCanSocket.Device]));
   end
   else
   begin
@@ -117,7 +117,7 @@ end; //*** end of BtnConnectClick ***
 //***************************************************************************************
 procedure TMainForm.BtnDisconnectClick(Sender: TObject);
 begin
-  FCanDriver.Disconnect;
+  FCanSocket.Disconnect;
   RxTimer.Enabled := False;
   MmoLog.Lines.Add('Disconnected from CAN device');
 end; //*** end of BtnDisconnectClick ***
@@ -133,9 +133,9 @@ procedure TMainForm.BtnListClick(Sender: TObject);
 var
   DeviceIndex: Integer;
 begin
-  for DeviceIndex := 1 to FCanDriver.Devices.Count do
+  for DeviceIndex := 1 to FCanSocket.Devices.Count do
   begin
-    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, FCanDriver.Devices[DeviceIndex-1]]));
+    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, FCanSocket.Devices[DeviceIndex-1]]));
   end;
 end; //*** end of BtnListClick ***
 
@@ -162,7 +162,7 @@ begin
     Msg.Data[Idx] := Idx + 1;
   end;
   // Transmit the message.
-  if FCanDriver.Transmit(Msg) then
+  if FCanSocket.Transmit(Msg) then
   begin
     MmoLog.Lines.Add('Transmitted CAN message');
   end
@@ -181,7 +181,7 @@ end; //*** end of BtnTransmitClick ***
 //***************************************************************************************
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
-  FCanDriver.Free;
+  FCanSocket.Free;
 end; //*** end of FormDestroy ***
 
 

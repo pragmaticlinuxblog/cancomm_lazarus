@@ -136,24 +136,24 @@ procedure CanCommDisconnect(Context: TCanComm);
 //
 //***************************************************************************************
 function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
-                         PData: PByte; Flags: Byte; PTimestamp: PQWord): Byte;
+                         PData: PByte; Flags: Byte; out Timestamp: QWord): Byte;
          cdecl; external CANCOMM_LIBNAME name 'cancomm_transmit';
 
 
 //***************************************************************************************
 // NAME:           CanCommReceive
 // PARAMETER:      Context CAN communication context.
-//                 PId Pointer to where the CAN message identifier is stored.
-//                 PExt Pointer to where the CAN identifier type is stored. CANCOMM_FALSE
+//                 Id Variable where the CAN message identifier is stored.
+//                 Ext Variable where the CAN identifier type is stored. CANCOMM_FALSE
 //                 for an 11-bit message identifier, CANCOMM_TRUE for 29-bit.
-//                 PLen Pointer to where the number of CAN message data bytes is stored.
+//                 Len Variable where the number of CAN message data bytes is stored.
 //                 PData Pointer to array where the data bytes are stored.
-//                 PFlags Pointer to where the bit flags are stored for providing
+//                 Flags Variable where the bit flags are stored for providing
 //                 additional information about the received message:
 //                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
 //                                                  classic.
 //                         CANCOMM_FLAG_CANERR_MSG - The message is a CAN error frame.
-//                 PTimestamp Pointer to where the timestamp (microseconds) of the
+//                 Timestamp Variable where the timestamp (microseconds) of the
 //                 message is stored.
 // RETURN VALUE:   CANCOMM_TRUE if a new message was received and copied. CANCOMM_FALSE
 //                 otherwise.
@@ -161,8 +161,9 @@ function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
 //                 non-blocking manner.
 //
 //***************************************************************************************
-function CanCommReceive(Context: TCanComm; PId: PLongWord; PExt: PByte; PLen: PByte;
-                        PData: PByte; PFlags: PByte; PTimestamp: PQWord): Byte;
+function CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
+                        out Len: Byte; PData: PByte; out Flags: Byte;
+                        out Timestamp: QWord): Byte;
          cdecl; external CANCOMM_LIBNAME name 'cancomm_receive';
 
 

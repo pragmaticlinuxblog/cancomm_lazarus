@@ -49,9 +49,9 @@
         <UnitName Value="CanComm"/>
       </Unit2>
       <Unit3>
-        <Filename Value="../source/candriver.pas"/>
+        <Filename Value="../source/cansocket.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="CanDriver"/>
+        <UnitName Value="CanSocket"/>
       </Unit3>
     </Units>
   </ProjectOptions>
