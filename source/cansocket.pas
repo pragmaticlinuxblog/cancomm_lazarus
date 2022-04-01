@@ -33,7 +33,7 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, CanComm;
+  Classes, SysUtils, LResources, CanComm;
 
 
 //***************************************************************************************
@@ -118,6 +118,12 @@ type
     property    OnMessage: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
     property    OnErrorFrame: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
   end;
+
+
+//***************************************************************************************
+// Function prototypes
+//***************************************************************************************
+procedure Register;
 
 
 implementation
@@ -383,6 +389,22 @@ begin
     end;
   end;
 end; //*** end of Transmit ***
+
+
+//***************************************************************************************
+// NAME:           Register
+// DESCRIPTION:    Registers the component such that it shows up on the IDE's component
+//                 palette.
+//
+//***************************************************************************************
+procedure Register;
+begin
+  RegisterComponents('System', [TCanSocket]);
+end;  //*** end of Register ***
+
+
+initialization
+  {$I socketcan.lrs}
 
 
 end.
