@@ -7,10 +7,12 @@
       <Unit0>
         <Filename Value="SocketCanDemo.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="19"/>
         <CursorPos Y="34"/>
         <UsageCount Value="30"/>
+        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="mainunit.pas"/>
@@ -19,7 +21,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainUnit"/>
-        <TopLine Value="36"/>
+        <TopLine Value="9"/>
         <CursorPos X="17" Y="42"/>
         <UsageCount Value="30"/>
         <Loaded Value="True"/>
@@ -29,7 +31,7 @@
         <Filename Value="../source/cancomm.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="43"/>
         <CursorPos Y="60"/>
         <UsageCount Value="30"/>
@@ -39,10 +41,9 @@
         <Filename Value="../source/cansocket.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanSocket"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="116"/>
-        <CursorPos Y="158"/>
+        <TopLine Value="83"/>
+        <CursorPos X="28" Y="146"/>
         <UsageCount Value="23"/>
         <Loaded Value="True"/>
       </Unit3>
@@ -50,7 +51,7 @@
         <Filename Value="../source/candevices.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanDevices"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="58"/>
         <CursorPos X="31" Y="70"/>
         <UsageCount Value="21"/>
