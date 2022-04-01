@@ -43,17 +43,17 @@ type
   //---------------------------------- TCanDevices --------------------------------------
   // Class for convenient access to the CAN devices detected on the system.
   TCanDevices = class(TObject)
-    private
-      FCanContext: TCanComm;
-      FCount: Integer;
-      procedure   BuildDeviceList;
-      function    GetCount: Integer;
-      function    GetDevice(Index: Integer): string;
-    public
-      constructor Create;
-      destructor  Destroy; override;
-      property    Count: Integer read GetCount;
-      property    Devices[Index: Integer]: string read GetDevice; default;
+  private
+    FCanContext: TCanComm;
+    FCount: Integer;
+    procedure   BuildDeviceList;
+    function    GetCount: Integer;
+    function    GetDevice(Index: Integer): string;
+  public
+    constructor Create;
+    destructor  Destroy; override;
+    property    Count: Integer read GetCount;
+    property    Devices[Index: Integer]: string read GetDevice; default;
   end;
 
 
@@ -78,7 +78,7 @@ begin
   // Make sure the context could be created.
   if FCanContext = nil then
   begin
-    raise Exception.Create('Could not create CAN communication context');
+    raise EInvalidPointer.Create('Could not create CAN communication context');
   end;
 end; //*** end of Create ***
 

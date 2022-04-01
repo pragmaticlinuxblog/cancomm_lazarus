@@ -75,30 +75,36 @@ type
 
   //---------------------------------- TCanSocket ---------------------------------------
   TCanSocket = class(TComponent)
-  // TODO Implement reception thread. Should probably be a separate nested class.
-  strict private
-    { Private declarations }
+  private
+    type
+      TCanThread = class(TThread)
+      private
+        FParent: TCanSocket;
+      protected
+        procedure   Execute; override;
+      public
+        constructor Create(AParent: TCanSocket);
+        property    Parent: TCanSocket read FParent;
+      end;
+  private
     FCanDevices: TCanDevices;
     FOnMsgReceived: TCanMsgReceivedEvent;
     FOnErrFrameReceived: TCanErrFrameReceivedEvent;
     FDevice: string;
+    FEventThread: TCanThread;
     procedure   SetDevice(Value: string);
-  strict protected
-    { Protected declarations }
+  protected
     FCanContext: TCanComm;
     FConnected : Boolean;
   public
-    { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
     function    Connect: Boolean; virtual;
     procedure   Disconnect; virtual;
     function    Transmit(var Msg: TCanMsg): Boolean; virtual;
-    { Public properties }
     property    Connected: Boolean read FConnected;
     property    Devices: TCanDevices read FCanDevices;
   published
-    { Published properties }
     property    Device: string read FDevice write SetDevice;
     property    OnMessage: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
     property    OnErrorFrame: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
@@ -115,6 +121,51 @@ implementation
 //---------------------------------------------------------------------------------------
 //-------------------------------- TCanSocket -------------------------------------------
 //---------------------------------------------------------------------------------------
+//***************************************************************************************
+// NAME:           Create
+// PARAMETER:      AParent Parent class.
+// DESCRIPTION:    Thread constructor.
+//
+//***************************************************************************************
+constructor TCanSocket.TCanThread.Create(AParent: TCanSocket);
+begin
+  // Make sure the parent is valid.
+  if AParent = nil then
+  begin
+    raise EArgumentNilException.Create('Invalid parent specified');
+  end;
+  // Initialize fields
+  FParent := AParent;
+  // Call inherited construction.
+  inherited Create(True);
+end; //*** end of Create ***
+
+
+//***************************************************************************************
+// NAME:           Execute
+// DESCRIPTION:    Thread execution function.
+//
+//***************************************************************************************
+procedure TCanSocket.TCanThread.Execute;
+begin
+  // Enter thread's execution loop
+  while not Terminated do
+  begin
+    // Only actively check for CAN events if the CAN socket is connected.
+    if Parent.Connected then
+    begin
+      // TODO Implement Execute method. Sleep for now..
+      Sleep(50);
+    end
+    // Not connected. Just wait a bit to not starve the CPU.
+    else
+    begin
+      Sleep(50);
+    end;
+  end;
+end; //*** end of Execute ***
+
+
 //***************************************************************************************
 // NAME:           Create
 // PARAMETER:      AOwner Instance owner.
@@ -137,8 +188,17 @@ begin
   // Make sure the context could be created.
   if FCanContext = nil then
   begin
-    raise Exception.Create('Could not create CAN communication context');
+    raise EInvalidPointer.Create('Could not create CAN communication context');
   end;
+  // Create the event thread.
+  FEventThread := TCanThread.Create(Self);
+  // Make sure the event could be created.
+  if FEventThread = nil then
+  begin
+    raise EInvalidPointer.Create('Could not create event thread');
+  end;
+  // Start the event thread.
+  FEventThread.Start;
 end; //*** end of Create ***
 
 
@@ -151,6 +211,12 @@ destructor TCanSocket.Destroy;
 begin
   // Make sure to disconnect.
   Disconnect;
+  // Set event thread termination request.
+  FEventThread.Terminate;
+  // Wait for thread termination to complete.
+  FEventThread.WaitFor;
+  // Release the thread object.
+  FEventThread.Free;
   // Release the CAN communication context.
   if (FCanContext <> nil) then
   begin
