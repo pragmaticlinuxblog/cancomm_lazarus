@@ -10,7 +10,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="19"/>
         <CursorPos Y="34"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
       </Unit0>
       <Unit1>
         <Filename Value="mainunit.pas"/>
@@ -21,7 +21,7 @@
         <UnitName Value="MainUnit"/>
         <TopLine Value="36"/>
         <CursorPos X="17" Y="42"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -30,9 +30,9 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="166"/>
+        <TopLine Value="46"/>
         <CursorPos X="31" Y="7"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -41,9 +41,9 @@
         <UnitName Value="CanSocket"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="61"/>
-        <CursorPos Y="95"/>
-        <UsageCount Value="21"/>
+        <TopLine Value="74"/>
+        <CursorPos X="62" Y="112"/>
+        <UsageCount Value="22"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
@@ -76,7 +76,7 @@
         <UsageCount Value="10"/>
       </Unit7>
     </Units>
-    <JumpHistory Count="15" HistoryIndex="14">
+    <JumpHistory Count="21" HistoryIndex="20">
       <Position1>
         <Filename Value="mainunit.pas"/>
         <Caret Line="184" TopLine="143"/>
@@ -137,6 +137,30 @@
         <Filename Value="../source/cansocket.pas"/>
         <Caret Line="379" Column="33" TopLine="367"/>
       </Position15>
+      <Position16>
+        <Filename Value="../source/cansocket.pas"/>
+        <Caret Line="201" Column="21" TopLine="181"/>
+      </Position16>
+      <Position17>
+        <Filename Value="../source/cansocket.pas"/>
+        <Caret Line="82" Column="9" TopLine="56"/>
+      </Position17>
+      <Position18>
+        <Filename Value="../source/cansocket.pas"/>
+        <Caret Line="94" Column="9" TopLine="71"/>
+      </Position18>
+      <Position19>
+        <Filename Value="../source/cansocket.pas"/>
+        <Caret Line="79" Column="10" TopLine="47"/>
+      </Position19>
+      <Position20>
+        <Filename Value="../source/cansocket.pas"/>
+        <Caret Line="82" TopLine="65"/>
+      </Position20>
+      <Position21>
+        <Filename Value="../source/cansocket.pas"/>
+        <Caret Line="79" Column="10" TopLine="38"/>
+      </Position21>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>

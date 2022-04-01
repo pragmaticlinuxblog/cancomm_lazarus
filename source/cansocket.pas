@@ -65,22 +65,6 @@ type
     Timestamp: QWord;    // Message timestamp
   end;
 
-  //---------------------------------- TCanDevices --------------------------------------
-  // Class for convenient access to the CAN devices detected on the system.
-  TCanDevices = class(TObject)
-    private
-      FCanContext: TCanComm;
-      FCount: Integer;
-      procedure   BuildDeviceList;
-      function    GetCount: Integer;
-      function    GetDevice(Index: Integer): string;
-    public
-      constructor Create(ACanContext: TCanComm);
-      destructor  Destroy; override;
-      property    Count: Integer read GetCount;
-      property    Devices[Index: Integer]: string read GetDevice; default;
-  end;
-
   //---------------------------------- TCanMsgReceivedEvent -----------------------------
   // Event handler type for CAN message reception.
   TCanMsgReceivedEvent = procedure(Sender: TObject; constref Msg: TCanMsg) of object;
@@ -92,24 +76,40 @@ type
   //---------------------------------- TCanSocket ---------------------------------------
   TCanSocket = class(TComponent)
   // TODO Implement reception thread. Should probably be a separate class.
-  private
+  strict private
+    { Private nested classes }
+    type
+      TCanDevices = class(TObject)
+      strict private
+        FCanContext: TCanComm;
+        FCount: Integer;
+        procedure   BuildDeviceList;
+        function    GetCount: Integer;
+        function    GetDevice(Index: Integer): string;
+      public
+        constructor Create(ACanContext: TCanComm);
+        destructor  Destroy; override;
+        property    Count: Integer read GetCount;
+        property    Devices[Index: Integer]: string read GetDevice; default;
+      end;
+  strict private
     { Private declarations }
     FCanDevices: TCanDevices;
-  protected
+    FOnMsgReceived: TCanMsgReceivedEvent;
+    FOnErrFrameReceived: TCanErrFrameReceivedEvent;
+    FDevice: string;
+    procedure   SetDevice(Value: string);
+  strict protected
     { Protected declarations }
     FCanContext: TCanComm;
     FConnected : Boolean;
-    FDevice: string;
-    FOnMsgReceived: TCanMsgReceivedEvent;
-    FOnErrFrameReceived: TCanErrFrameReceivedEvent;
-    procedure   SetDevice(Value: string);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
-    function    Connect: Boolean;
-    procedure   Disconnect;
-    function    Transmit(var Msg: TCanMsg): Boolean;
+    function    Connect: Boolean; virtual;
+    procedure   Disconnect; virtual;
+    function    Transmit(var Msg: TCanMsg): Boolean; virtual;
     { Public properties }
     property    Connected: Boolean read FConnected;
     property    Devices: TCanDevices read FCanDevices;
@@ -138,7 +138,7 @@ implementation
 //                 the fields their default values.
 //
 //***************************************************************************************
-constructor TCanDevices.Create(ACanContext: TCanComm);
+constructor TCanSocket.TCanDevices.Create(ACanContext: TCanComm);
 begin
   // Call inherited constructor.
   inherited Create;
@@ -153,7 +153,7 @@ end; //*** end of Create ***
 // DESCRIPTION:    Object destructor. Calls TObjects's destructor
 //
 //***************************************************************************************
-destructor TCanDevices.Destroy;
+destructor TCanSocket.TCanDevices.Destroy;
 begin
   // Call inherited destructor.
   inherited Destroy;
@@ -165,7 +165,7 @@ end; //*** end of Destroy ***
 // DESCRIPTION:    Refreshes the CAN device list inside the context.
 //
 //***************************************************************************************
-procedure TCanDevices.BuildDeviceList;
+procedure TCanSocket.TCanDevices.BuildDeviceList;
 begin
   // Reset the device count.
   FCount := 0;
@@ -184,7 +184,7 @@ end; //*** end of BuildDeviceList ***
 // DESCRIPTION:    Obtains the number of CAN devices detected on the system.
 //
 //***************************************************************************************
-function TCanDevices.GetCount: Integer;
+function TCanSocket.TCanDevices.GetCount: Integer;
 begin
   // Build the CAN device list, which also updates FCount.
   BuildDeviceList;
@@ -200,7 +200,7 @@ end; //*** end of GetCount ***
 // DESCRIPTION:    Obtains the name of the CAN device at the specified index.
 //
 //***************************************************************************************
-function TCanDevices.GetDevice(Index: Integer): string;
+function TCanSocket.TCanDevices.GetDevice(Index: Integer): string;
 var
   DeviceName: PAnsiChar;
 begin
