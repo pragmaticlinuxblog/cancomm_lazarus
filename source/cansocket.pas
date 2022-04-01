@@ -92,7 +92,6 @@ type
   //---------------------------------- TCanSocket ---------------------------------------
   TCanSocket = class(TComponent)
   // TODO Implement reception thread. Should probably be a separate class.
-  // TODO Implement register function and figure out how to add an icon.
   private
     { Private declarations }
     FCanDevices: TCanDevices;
@@ -112,9 +111,11 @@ type
     procedure   Disconnect;
     function    Transmit(var Msg: TCanMsg): Boolean;
     { Public properties }
-    property    Device: string read FDevice write SetDevice;
     property    Connected: Boolean read FConnected;
     property    Devices: TCanDevices read FCanDevices;
+  published
+    { Published properties }
+    property    Device: string read FDevice write SetDevice;
     property    OnMessage: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
     property    OnErrorFrame: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
   end;
@@ -399,12 +400,9 @@ end; //*** end of Transmit ***
 //***************************************************************************************
 procedure Register;
 begin
+  {$I socketcan.lrs}
   RegisterComponents('System', [TCanSocket]);
 end;  //*** end of Register ***
-
-
-initialization
-  {$I socketcan.lrs}
 
 
 end.

@@ -20,16 +20,14 @@
       </Item1>
       <Item2>
         <Filename Value="cansocket.pas"/>
+        <HasRegisterProc Value="True"/>
         <UnitName Value="CanSocket"/>
       </Item2>
     </Files>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="1">
       <Item1>
-        <PackageName Value="LCL"/>
+        <PackageName Value="IDEIntf"/>
       </Item1>
-      <Item2>
-        <PackageName Value="FCL"/>
-      </Item2>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
