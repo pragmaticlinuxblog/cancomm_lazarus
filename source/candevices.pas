@@ -50,7 +50,7 @@ type
       function    GetCount: Integer;
       function    GetDevice(Index: Integer): string;
     public
-      constructor Create(ACanContext: TCanComm);
+      constructor Create;
       destructor  Destroy; override;
       property    Count: Integer read GetCount;
       property    Devices[Index: Integer]: string read GetDevice; default;
@@ -63,18 +63,23 @@ implementation
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 // NAME:           Create
-// PARAMETER:      ACanContext The CAN communication context that it operates on.
 // DESCRIPTION:    Object constructor. Calls TObjects's constructor and initializes
-//                 the fields their default values.
+//                 the fields to their default values.
 //
 //***************************************************************************************
-constructor TCanDevices.Create(ACanContext: TCanComm);
+constructor TCanDevices.Create;
 begin
   // Call inherited constructor.
   inherited Create;
-  // Store the context.
-  FCanContext := ACanContext;
+  // Initialize fields.
   FCount := 0;
+  // Create the CAN communication context.
+  FCanContext := CanCommNew;
+  // Make sure the context could be created.
+  if FCanContext = nil then
+  begin
+    raise Exception.Create('Could not create CAN communication context');
+  end;
 end; //*** end of Create ***
 
 
@@ -85,6 +90,11 @@ end; //*** end of Create ***
 //***************************************************************************************
 destructor TCanDevices.Destroy;
 begin
+  // Release the CAN communication context.
+  if (FCanContext <> nil) then
+  begin
+    CanCommFree(FCanContext);
+  end;
   // Call inherited destructor.
   inherited Destroy;
 end; //*** end of Destroy ***

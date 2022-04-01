@@ -10,7 +10,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="19"/>
         <CursorPos Y="34"/>
-        <UsageCount Value="29"/>
+        <UsageCount Value="30"/>
       </Unit0>
       <Unit1>
         <Filename Value="mainunit.pas"/>
@@ -21,7 +21,7 @@
         <UnitName Value="MainUnit"/>
         <TopLine Value="36"/>
         <CursorPos X="17" Y="42"/>
-        <UsageCount Value="29"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -30,9 +30,9 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="189"/>
-        <CursorPos X="40" Y="201"/>
-        <UsageCount Value="29"/>
+        <TopLine Value="43"/>
+        <CursorPos Y="60"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -41,49 +41,49 @@
         <UnitName Value="CanSocket"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="98"/>
-        <CursorPos Y="118"/>
-        <UsageCount Value="22"/>
+        <TopLine Value="116"/>
+        <CursorPos Y="158"/>
+        <UsageCount Value="23"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
+        <Filename Value="../source/candevices.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CanDevices"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="58"/>
+        <CursorPos X="31" Y="70"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
         <Filename Value="../source/candriver.pas"/>
         <UnitName Value="CanDriver"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="28"/>
         <CursorPos X="54" Y="36"/>
         <UsageCount Value="25"/>
-      </Unit4>
-      <Unit5>
+      </Unit5>
+      <Unit6>
         <Filename Value="../source/canmsg.pas"/>
         <UnitName Value="CanMsg"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="31"/>
         <CursorPos Y="67"/>
         <UsageCount Value="27"/>
-      </Unit5>
-      <Unit6>
+      </Unit6>
+      <Unit7>
         <Filename Value="/usr/lib64/lazarus/lcl/stdctrls.pp"/>
         <UnitName Value="StdCtrls"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="974"/>
         <CursorPos X="3" Y="984"/>
         <UsageCount Value="10"/>
-      </Unit6>
-      <Unit7>
+      </Unit7>
+      <Unit8>
         <Filename Value="../source/socketcan.lrs"/>
         <EditorIndex Value="-1"/>
         <UsageCount Value="10"/>
-      </Unit7>
-      <Unit8>
-        <Filename Value="../source/candevices.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CanDevices"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="11"/>
-        <CursorPos Y="109"/>
-        <UsageCount Value="20"/>
-        <Loaded Value="True"/>
       </Unit8>
     </Units>
     <JumpHistory Count="21" HistoryIndex="20">

@@ -54,8 +54,8 @@ const
 //***************************************************************************************
 // Type definitions
 //***************************************************************************************
-// Opaque pointer for the CAN communication context.
 type
+  // Opaque pointer for the CAN communication context.
   TCanComm = pointer;
 
 

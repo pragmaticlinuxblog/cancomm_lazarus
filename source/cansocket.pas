@@ -119,7 +119,7 @@ implementation
 // NAME:           Create
 // PARAMETER:      AOwner Instance owner.
 // DESCRIPTION:    Component constructor. Calls TComponents's constructor and initializes
-//                 the fields their default values.
+//                 the fields to their default values.
 //
 //***************************************************************************************
 constructor TCanSocket.Create(AOwner: TComponent);
@@ -130,6 +130,8 @@ begin
   FConnected := False;
   FOnMsgReceived := nil;
   FOnErrFrameReceived := nil;
+  // Create the CAN devices class.
+  FCanDevices := TCanDevices.Create;
   // Create the CAN communication context.
   FCanContext := CanCommNew;
   // Make sure the context could be created.
@@ -137,8 +139,6 @@ begin
   begin
     raise Exception.Create('Could not create CAN communication context');
   end;
-  // Create the CAN devices class.
-  FCanDevices := TCanDevices.Create(FCanContext);
 end; //*** end of Create ***
 
 
