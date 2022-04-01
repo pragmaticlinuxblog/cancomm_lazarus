@@ -3,7 +3,7 @@
   <ProjectSession>
     <Version Value="11"/>
     <BuildModes Active="Default"/>
-    <Units Count="8">
+    <Units Count="9">
       <Unit0>
         <Filename Value="SocketCanDemo.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -29,9 +29,9 @@
         <Filename Value="../source/cancomm.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CanComm"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="46"/>
-        <CursorPos X="31" Y="7"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="189"/>
+        <CursorPos X="40" Y="201"/>
         <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit2>
@@ -41,8 +41,8 @@
         <UnitName Value="CanSocket"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="116"/>
-        <CursorPos Y="134"/>
+        <TopLine Value="98"/>
+        <CursorPos Y="118"/>
         <UsageCount Value="22"/>
         <Loaded Value="True"/>
       </Unit3>
@@ -75,6 +75,16 @@
         <EditorIndex Value="-1"/>
         <UsageCount Value="10"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="../source/candevices.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CanDevices"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="11"/>
+        <CursorPos Y="109"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit8>
     </Units>
     <JumpHistory Count="21" HistoryIndex="20">
       <Position1>

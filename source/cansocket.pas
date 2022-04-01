@@ -33,7 +33,7 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, LResources, CanComm;
+  Classes, SysUtils, LResources, CanComm, CanDevices;
 
 
 //***************************************************************************************
@@ -77,22 +77,6 @@ type
   TCanSocket = class(TComponent)
   // TODO Implement reception thread. Should probably be a separate nested class.
   strict private
-    { Private nested classes }
-    type
-      TCanDevices = class(TObject)
-      strict private
-        FCanContext: TCanComm;
-        FCount: Integer;
-        procedure   BuildDeviceList;
-        function    GetCount: Integer;
-        function    GetDevice(Index: Integer): string;
-      public
-        constructor Create(ACanContext: TCanComm);
-        destructor  Destroy; override;
-        property    Count: Integer read GetCount;
-        property    Devices[Index: Integer]: string read GetDevice; default;
-      end;
-  strict private
     { Private declarations }
     FCanDevices: TCanDevices;
     FOnMsgReceived: TCanMsgReceivedEvent;
@@ -131,97 +115,6 @@ implementation
 //---------------------------------------------------------------------------------------
 //-------------------------------- TCanSocket -------------------------------------------
 //---------------------------------------------------------------------------------------
-//***************************************************************************************
-// NAME:           Create
-// PARAMETER:      ACanContext The CAN communication context that it operates on.
-// DESCRIPTION:    Object constructor. Calls TObjects's constructor and initializes
-//                 the fields their default values.
-//
-//***************************************************************************************
-constructor TCanSocket.TCanDevices.Create(ACanContext: TCanComm);
-begin
-  // Call inherited constructor.
-  inherited Create;
-  // Store the context.
-  FCanContext := ACanContext;
-  FCount := 0;
-end; //*** end of Create ***
-
-
-//***************************************************************************************
-// NAME:           Destroy
-// DESCRIPTION:    Object destructor. Calls TObjects's destructor
-//
-//***************************************************************************************
-destructor TCanSocket.TCanDevices.Destroy;
-begin
-  // Call inherited destructor.
-  inherited Destroy;
-end; //*** end of Destroy ***
-
-
-//***************************************************************************************
-// NAME:           BuildDeviceList
-// DESCRIPTION:    Refreshes the CAN device list inside the context.
-//
-//***************************************************************************************
-procedure TCanSocket.TCanDevices.BuildDeviceList;
-begin
-  // Reset the device count.
-  FCount := 0;
-  // Only continue with a valid context.
-  if FCanContext <> nil then
-  begin
-    // Rebuild the list and store the total number of detected CAN devices.
-    FCount := CanCommDevicesBuildList(FCanContext);
-  end;
-end; //*** end of BuildDeviceList ***
-
-
-//***************************************************************************************
-// NAME:           GetCount
-// RETURN VALUE:   Number of detected CAN devices on the system.
-// DESCRIPTION:    Obtains the number of CAN devices detected on the system.
-//
-//***************************************************************************************
-function TCanSocket.TCanDevices.GetCount: Integer;
-begin
-  // Build the CAN device list, which also updates FCount.
-  BuildDeviceList;
-  // Update the result.
-  Result := FCount;
-end; //*** end of GetCount ***
-
-
-//***************************************************************************************
-// NAME:           GetDevice
-// PARAMETER:      Index Zero based index into the list with CAN devices.
-// RETURN VALUE:   Name of the CAN device at the specified index.
-// DESCRIPTION:    Obtains the name of the CAN device at the specified index.
-//
-//***************************************************************************************
-function TCanSocket.TCanDevices.GetDevice(Index: Integer): string;
-var
-  DeviceName: PAnsiChar;
-begin
-  // Initialize the result.
-  Result := '';
-  // Build the CAN device list, which also updates FCount.
-  BuildDeviceList;
-  // Only continue if the index is valid
-  if Index < FCount then
-  begin
-    // Obtain the device name.
-    DeviceName := CanCommDevicesName(FCanContext, Index);
-    // Update the result if the device name is valid.
-    if DeviceName <> nil then
-    begin
-      Result := StrPas(DeviceName);
-    end;
-  end;
-end;  //*** end of GetDevice ***
-
-
 //***************************************************************************************
 // NAME:           Create
 // PARAMETER:      AOwner Instance owner.

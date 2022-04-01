@@ -13,7 +13,7 @@
     <Description Value="CAN communication component based on the SocketCAN functionality of the Linux kernel."/>
     <License Value="FPC modified LGPL Version 2"/>
     <Version Major="1"/>
-    <Files Count="2">
+    <Files Count="3">
       <Item1>
         <Filename Value="cancomm.pas"/>
         <UnitName Value="CanComm"/>
@@ -23,6 +23,10 @@
         <HasRegisterProc Value="True"/>
         <UnitName Value="CanSocket"/>
       </Item2>
+      <Item3>
+        <Filename Value="candevices.pas"/>
+        <UnitName Value="CanDevices"/>
+      </Item3>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>
