@@ -80,6 +80,8 @@ type
       TCanThread = class(TThread)
       private
         FParent: TCanSocket;
+        FEventMsg: TCanMsg;
+        procedure UpdateEvent;
       protected
         procedure   Execute; override;
       public
@@ -93,6 +95,7 @@ type
     FDevice: string;
     FEventThread: TCanThread;
     procedure   SetDevice(Value: string);
+    procedure   ProcessEvent(constref Msg: TCanMsg);
   protected
     FCanContext: TCanComm;
     FConnected : Boolean;
@@ -142,24 +145,92 @@ end; //*** end of Create ***
 
 
 //***************************************************************************************
+// NAME:           UpdateEvent
+// DESCRIPTION:    Called by the thread whenever a CAN related event was detected. This
+//                 method is synchronized and executed by the mainthread and can
+//                 therefore access all GUI elements.
+//
+//***************************************************************************************
+procedure TCanSocket.TCanThread.UpdateEvent;
+begin
+  // Inform the parent about this event.
+  Parent.ProcessEvent(FEventMsg);
+  // Clear the data bytes in preparation for the next event.
+  FillByte(FEventMsg.Data, SizeOf(FEventMsg.Data), 0);
+end; //*** end of UpdateEvent ****
+
+
+//***************************************************************************************
 // NAME:           Execute
 // DESCRIPTION:    Thread execution function.
 //
 //***************************************************************************************
 procedure TCanSocket.TCanThread.Execute;
+const
+  // Impacts CPU load that this thread uses. A lower number lowers the CPU load, but at
+  // the cost of delaying the processing of CAN events.
+  IDLE_COUNTER_MAX = 100;
+var
+  Ext: Byte;
+  Flags: Byte;
+  IdleCounter: LongWord;
 begin
+  // Initialze the idle counter.
+  IdleCounter := 0;
+  // Clear the event message data bytes.
+  FillByte(FEventMsg.Data, SizeOf(FEventMsg.Data), 0);
   // Enter thread's execution loop
   while not Terminated do
   begin
     // Only actively check for CAN events if the CAN socket is connected.
     if Parent.Connected then
     begin
-      // TODO Implement Execute method. Sleep for now..
-      Sleep(50);
+      // Check for the reception of a new CAN message.
+      if CanCommReceive(Parent.FCanContext, FEventMsg.Id, Ext, FEventMsg.Len, @FEventMsg.Data[0],
+                        Flags, FEventMsg.Timestamp) = CANCOMM_TRUE then
+      begin
+        // Convert those parts of the CAN message that have a different type.
+        FEventMsg.Ext := False;
+        FEventMsg.Flags.Fd := False;
+        FEventMsg.Flags.Err := False;
+        // 29-bit identifier?
+        if Ext = CANCOMM_FALSE then
+        begin
+          FEventMsg.Ext := True;
+        end;
+        // CAN FD frame?
+        if (Flags and CANCOMM_FLAG_CANFD_MSG) <> 0 then
+        begin
+          FEventMsg.Flags.Fd := True;
+        end;
+        // Error frame?
+        if (Flags and CANCOMM_FLAG_CANERR_MSG) <> 0 then
+        begin
+          FEventMsg.Flags.Err := True;
+        end;
+        // Synchronize the event with the main thread and process it then.
+        Synchronize(@UpdateEvent);
+      end
+      // No event detected this loop iteration.
+      else
+      begin
+        // Increment the idle counter.
+        IdleCounter := IdleCounter + 1;
+        // Idle timeout detected?
+        if IdleCounter >= IDLE_COUNTER_MAX then
+        begin
+          // Reset the idle counter.
+          IdleCounter := 0;
+          // Sleep a little to not hog up the CPU.
+          Sleep(1);
+        end;
+      end;
     end
     // Not connected. Just wait a bit to not starve the CPU.
     else
     begin
+      // Don't make this too long, because it also affects how long it takes for the
+      // thread to terminate.
       Sleep(50);
     end;
   end;
@@ -258,6 +329,35 @@ begin
     end;
   end;
 end; //*** end of SetDevice ***
+
+
+//***************************************************************************************
+// NAME:           ProcessEvent
+// PARAMETER:      Msg The message related to the event.
+// DESCRIPTION:    Process the reception of a new CAN message and/or error frame.
+//
+//***************************************************************************************
+procedure TCanSocket.ProcessEvent(constref Msg: TCanMsg);
+begin
+  // Event caused by the reception of a new CAN data frame?
+  if Msg.Flags.Err = False then
+  begin
+    // Signal the event handler.
+    if Assigned(FOnMsgReceived) then
+    begin
+      FOnMsgReceived(Self, Msg);
+    end;
+  end
+  // Event was caused by the reception of an error frame.
+  else
+  begin
+    // Signal the event handler.
+    if Assigned(FOnErrFrameReceived) then
+    begin
+      FOnErrFrameReceived(Self);
+    end;
+  end;
+end; //*** end of ProcessEvent ***
 
 
 //***************************************************************************************

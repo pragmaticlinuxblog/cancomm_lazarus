@@ -1,11 +1,11 @@
 object MainForm: TMainForm
-  Left = 1016
+  Left = 710
   Height = 262
-  Top = 292
-  Width = 481
+  Top = 314
+  Width = 594
   Caption = 'SocketCanDemo'
   ClientHeight = 262
-  ClientWidth = 481
+  ClientWidth = 594
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '2.0.12.0'
@@ -31,7 +31,7 @@ object MainForm: TMainForm
     Left = 0
     Height = 206
     Top = 56
-    Width = 481
+    Width = 594
     Align = alBottom
     ReadOnly = True
     ScrollBars = ssAutoVertical
@@ -54,12 +54,5 @@ object MainForm: TMainForm
     Caption = 'Transmit'
     OnClick = BtnTransmitClick
     TabOrder = 4
-  end
-  object RxTimer: TTimer
-    Enabled = False
-    Interval = 100
-    OnTimer = RxTimerTimer
-    Left = 320
-    Top = 192
   end
 end

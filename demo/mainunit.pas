@@ -47,14 +47,13 @@ type
     BtnList: TButton;
     BtnTransmit: TButton;
     MmoLog: TMemo;
-    RxTimer: TTimer;
     procedure BtnConnectClick(Sender: TObject);
     procedure BtnDisconnectClick(Sender: TObject);
     procedure BtnListClick(Sender: TObject);
     procedure BtnTransmitClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure RxTimerTimer(Sender: TObject);
+    procedure CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
   private
     FCanSocket: TCanSocket;
   public
@@ -85,6 +84,7 @@ implementation
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FCanSocket := TCanSocket.Create(Self);
+  FCanSocket.OnMessage := @CanMsgReceived;
 end; //*** end of FormCreate ***
 
 
@@ -99,7 +99,6 @@ begin
   FCanSocket.Device := FCanSocket.Devices[0];
   if FCanSocket.Connect then
   begin
-    RxTimer.Enabled := True;
     MmoLog.Lines.Add(Format('Connected to CAN device %s', [FCanSocket.Device]));
   end
   else
@@ -118,7 +117,6 @@ end; //*** end of BtnConnectClick ***
 procedure TMainForm.BtnDisconnectClick(Sender: TObject);
 begin
   FCanSocket.Disconnect;
-  RxTimer.Enabled := False;
   MmoLog.Lines.Add('Disconnected from CAN device');
 end; //*** end of BtnDisconnectClick ***
 
@@ -191,23 +189,20 @@ end; //*** end of FormDestroy ***
 // DESCRIPTION:    Timer event handler.
 //
 //***************************************************************************************
-procedure TMainForm.RxTimerTimer(Sender: TObject);
-{var
-  Id: LongWord;
-  Ext: Byte;
-  Len: Byte;
-  Data: Array [0..63] of Byte;
-  Flags: Byte;
-  Timestamp: QWord;
-  LogStr: String;}
+procedure TMainForm.CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
+var
+  LogStr: String;
+  Idx: Integer;
 begin
-  {if (CanCommReceive(FCanContext, @Id, @Ext, @Len, @Data[0], @Flags, @Timestamp)) = CANCOMM_TRUE then
+  LogStr := Format('Id %xh Len %u Data', [Msg.Id, Msg.Len]);
+  for Idx := 0 to Msg.Len - 1 do
   begin
-    LogStr := Format('Id %xh Len %d Data %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x',
-        [Id, Len, Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7]]);
-    MmoLog.Lines.Add('Received CAN message: ' + LogStr);
-  end; }
-end; //*** end of RxTimerTimer ***/
+    LogStr := LogStr + Format(' %.2x', [Msg.Data[Idx]]);
+  end;
+  LogStr := LogStr + Format(' Time  %u', [Msg.Timestamp]);
+  MmoLog.Lines.Add('Received CAN message: ' + LogStr);
+end; //*** end of MsgReceived ***
+
 
 end.
 //******************************** end of mainunit.pas **********************************
