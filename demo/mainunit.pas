@@ -117,7 +117,7 @@ end; //*** end of BtnConnectClick ***
 procedure TMainForm.BtnDisconnectClick(Sender: TObject);
 begin
   FCanSocket.Disconnect;
-  MmoLog.Lines.Add('Disconnected from CAN device');
+  MmoLog.Lines.Add(Format('Disconnected from CAN device %s', [FCanSocket.Device]));
 end; //*** end of BtnDisconnectClick ***
 
 
@@ -130,11 +130,21 @@ end; //*** end of BtnDisconnectClick ***
 procedure TMainForm.BtnListClick(Sender: TObject);
 var
   DeviceIndex: Integer;
+  DeviceStr: string;
 begin
-  for DeviceIndex := 1 to FCanSocket.Devices.Count do
+  if FCanSocket.Devices.Count = 0 then
   begin
-    MmoLog.Lines.Add(Format('Device %d: %s',[DeviceIndex, FCanSocket.Devices[DeviceIndex-1]]));
+    DeviceStr := 'No CAN devices detected';
+  end
+  else
+  begin
+    DeviceStr := 'Detected CAN devices:';
+    for DeviceIndex := 0 to FCanSocket.Devices.Count - 1 do
+    begin
+      DeviceStr := DeviceStr + (Format(' %s', [FCanSocket.Devices[DeviceIndex]]));
+    end;
   end;
+  MmoLog.Lines.Add(DeviceStr);
 end; //*** end of BtnListClick ***
 
 
@@ -162,7 +172,7 @@ begin
   // Transmit the message.
   if FCanSocket.Transmit(Msg) then
   begin
-    MmoLog.Lines.Add('Transmitted CAN message');
+    MmoLog.Lines.Add(FCanSocket.FormatMsg(Msg));
   end
   else
   begin
@@ -190,17 +200,8 @@ end; //*** end of FormDestroy ***
 //
 //***************************************************************************************
 procedure TMainForm.CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
-var
-  LogStr: String;
-  Idx: Integer;
 begin
-  LogStr := Format('Id %xh Len %u Data', [Msg.Id, Msg.Len]);
-  for Idx := 0 to Msg.Len - 1 do
-  begin
-    LogStr := LogStr + Format(' %.2x', [Msg.Data[Idx]]);
-  end;
-  LogStr := LogStr + Format(' Time  %u', [Msg.Timestamp]);
-  MmoLog.Lines.Add('Received CAN message: ' + LogStr);
+  MmoLog.Lines.Add(FCanSocket.FormatMsg(Msg));
 end; //*** end of MsgReceived ***
 
 

@@ -2,10 +2,10 @@ object MainForm: TMainForm
   Left = 710
   Height = 262
   Top = 314
-  Width = 594
+  Width = 477
   Caption = 'SocketCanDemo'
   ClientHeight = 262
-  ClientWidth = 594
+  ClientWidth = 477
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '2.0.12.0'
@@ -31,8 +31,11 @@ object MainForm: TMainForm
     Left = 0
     Height = 206
     Top = 56
-    Width = 594
+    Width = 477
     Align = alBottom
+    Font.Height = -13
+    Font.Name = 'Monospace'
+    ParentFont = False
     ReadOnly = True
     ScrollBars = ssAutoVertical
     TabOrder = 2

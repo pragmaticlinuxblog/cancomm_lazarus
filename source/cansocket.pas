@@ -105,6 +105,7 @@ type
     function    Connect: Boolean; virtual;
     procedure   Disconnect; virtual;
     function    Transmit(var Msg: TCanMsg): Boolean; virtual;
+    function    FormatMsg(constref Msg: TCanMsg): string; virtual;
     property    Connected: Boolean read FConnected;
     property    Devices: TCanDevices read FCanDevices;
   published
@@ -194,7 +195,7 @@ begin
         FEventMsg.Flags.Fd := False;
         FEventMsg.Flags.Err := False;
         // 29-bit identifier?
-        if Ext = CANCOMM_FALSE then
+        if Ext = CANCOMM_TRUE then
         begin
           FEventMsg.Ext := True;
         end;
@@ -446,6 +447,53 @@ begin
     end;
   end;
 end; //*** end of Transmit ***
+
+
+//***************************************************************************************
+// NAME:           FormatMsg
+// PARAMETER:      Msg CAN message to format.
+// RETURN VALUE:   The CAN message formated as a string.
+// DESCRIPTION:    Converts a CAN message to a string. Format is similar to what candump
+//                 of package can-utils shows.
+//
+//***************************************************************************************
+function TCanSocket.FormatMsg(constref Msg: TCanMsg): string;
+var
+  Seconds: LongWord;
+  Millis: LongWord;
+  Idx: Integer;
+begin
+  // Convert timestamp to seconds and milliseconds.
+  Seconds := Msg.Timestamp div 1000000;
+  Millis := Msg.Timestamp - (Seconds * 1000000);
+  // Add the timestamp.
+  Result := Format('(%.3u.%.6u)', [Seconds, Millis]);
+  // Add the device name.
+  Result := Result + Format(' %s', [FDevice]);
+  // Add the identifier.
+  if Msg.Ext then
+  begin
+    Result := Result + Format(' %.8x', [Msg.Id]);
+  end
+  else
+  begin
+    Result := Result + Format(' %.3x', [Msg.Id]);
+  end;
+  // Add the number of data bytes.
+  if Msg.Flags.Fd then
+  begin
+    Result := Result + Format(' [0%u]', [Msg.Len]);
+  end
+  else
+  begin
+    Result := Result + Format(' [%u]', [Msg.Len]);
+  end;
+  // Add the data bytes
+  for Idx := 0 to Msg.Len - 1 do
+  begin
+    Result := Result + Format(' %.2x', [Msg.Data[Idx]]);
+  end;
+end; //*** end of FormatMsg ***/
 
 
 //***************************************************************************************
