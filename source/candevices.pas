@@ -45,12 +45,13 @@ type
   TCanDevices = class(TObject)
   private
     FCanContext: TCanComm;
+    FCanContextManaged: Boolean;
     FCount: Integer;
     procedure   BuildDeviceList;
     function    GetCount: Integer;
     function    GetDevice(Index: Integer): string;
   public
-    constructor Create;
+    constructor Create(ACanContext: TCanComm = nil);
     destructor  Destroy; override;
     property    Count: Integer read GetCount;
     property    Devices[Index: Integer]: string read GetDevice; default;
@@ -63,22 +64,32 @@ implementation
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 // NAME:           Create
+// PARAMETER:      ACanContext CAN communication context to use. Can be nil. In this case
+//                 this class creates and frees a new context as needed.
 // DESCRIPTION:    Object constructor. Calls TObjects's constructor and initializes
 //                 the fields to their default values.
 //
 //***************************************************************************************
-constructor TCanDevices.Create;
+constructor TCanDevices.Create(ACanContext: TCanComm);
 begin
   // Call inherited constructor.
   inherited Create;
   // Initialize fields.
   FCount := 0;
-  // Create the CAN communication context.
-  FCanContext := CanCommNew;
-  // Make sure the context could be created.
+  FCanContextManaged := False;
+  FCanContext := ACanContext;
+  // Is a non-valid CAN communication context specified?
   if FCanContext = nil then
   begin
-    raise EInvalidPointer.Create('Could not create CAN communication context');
+    // Set flag to indicated that we manage our own CAN communication context.
+    FCanContextManaged := True;
+    // Create the CAN communication context.
+    FCanContext := CanCommNew;
+    // Make sure the context could be created.
+    if FCanContext = nil then
+    begin
+      raise EInvalidPointer.Create('Could not create CAN communication context');
+    end;
   end;
 end; //*** end of Create ***
 
@@ -90,10 +101,14 @@ end; //*** end of Create ***
 //***************************************************************************************
 destructor TCanDevices.Destroy;
 begin
-  // Release the CAN communication context.
-  if (FCanContext <> nil) then
+  // Are we managing our own CAN communication context?
+  if FCanContextManaged then
   begin
-    CanCommFree(FCanContext);
+    // Release the CAN communication context.
+    if FCanContext <> nil then
+    begin
+      CanCommFree(FCanContext);
+    end;
   end;
   // Call inherited destructor.
   inherited Destroy;

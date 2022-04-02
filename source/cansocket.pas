@@ -181,8 +181,6 @@ begin
   FConnected := False;
   FOnMsgReceived := nil;
   FOnErrFrameReceived := nil;
-  // Create the CAN devices class.
-  FCanDevices := TCanDevices.Create;
   // Create the CAN communication context.
   FCanContext := CanCommNew;
   // Make sure the context could be created.
@@ -190,6 +188,8 @@ begin
   begin
     raise EInvalidPointer.Create('Could not create CAN communication context');
   end;
+  // Create the CAN devices class.
+  FCanDevices := TCanDevices.Create(FCanContext);
   // Create the event thread.
   FEventThread := TCanThread.Create(Self);
   // Make sure the event could be created.
@@ -217,13 +217,13 @@ begin
   FEventThread.WaitFor;
   // Release the thread object.
   FEventThread.Free;
+  // Free the CAN devices class.
+  FCanDevices.Free;
   // Release the CAN communication context.
   if (FCanContext <> nil) then
   begin
     CanCommFree(FCanContext);
   end;
-  // Free the CAN devices class.
-  FCanDevices.Free;
   // Call inherited destructor.
   inherited Destroy;
 end; //*** end of Destroy ***
