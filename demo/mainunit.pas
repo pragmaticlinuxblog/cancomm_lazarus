@@ -44,22 +44,23 @@ type
   { TMainForm }
   TMainForm = class(TForm)
     BtnConnect: TButton;
-    BtnDisconnect: TButton;
-    BtnList: TButton;
     BtnTransmit: TButton;
+    CbbDevices: TComboBox;
+    GbxConnection: TGroupBox;
+    GbxTransmit: TGroupBox;
+    GbxLog: TGroupBox;
     MmoLog: TMemo;
     procedure BtnConnectClick(Sender: TObject);
-    procedure BtnDisconnectClick(Sender: TObject);
-    procedure BtnListClick(Sender: TObject);
     procedure BtnTransmitClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+  private
+    CanSocket: TCanSocket;
+    procedure PopulateDevices;
     procedure CanMsgTransmitted(Sender: TObject; constref Msg: TCanMsg);
     procedure CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
     procedure CanConnected(Sender: TObject);
     procedure CanDisconnected(Sender: TObject);
-  private
-    FCanSocket: TCanSocket;
   public
 
   end;
@@ -87,12 +88,61 @@ implementation
 //***************************************************************************************
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  FCanSocket := TCanSocket.Create(Self);
-  FCanSocket.OnTransmitted := @CanMsgTransmitted;
-  FCanSocket.OnReceived := @CanMsgReceived;
-  FCanSocket.OnConnected :=  @CanConnected;
-  FCanSocket.OnDisconnected := @CanDisconnected;
+  // Create CAN socket.
+  CanSocket := TCanSocket.Create(Self);
+  // Set the event handlers.
+  CanSocket.OnTransmitted := @CanMsgTransmitted;
+  CanSocket.OnReceived := @CanMsgReceived;
+  CanSocket.OnConnected :=  @CanConnected;
+  CanSocket.OnDisconnected := @CanDisconnected;
+  // Refresh the devices in the combobox list.
+  PopulateDevices;
 end; //*** end of FormCreate ***
+
+
+//***************************************************************************************
+// NAME:           FormDestroy
+// PARAMETER:      Sender Source of the event.
+// DESCRIPTION:    Form destructor.
+//
+//***************************************************************************************
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  CanSocket.Free;
+end; //*** end of FormDestroy ***
+
+
+//***************************************************************************************
+// NAME:           PopulateDevices
+// PARAMETER:      Sender Source of the event.
+// DESCRIPTION:    Refreshes the items in the device combobox.
+//
+//***************************************************************************************
+procedure TMainForm.PopulateDevices;
+var
+  DeviceIndex: Integer;
+begin
+  // Clear the list.
+  CbbDevices.Items.Clear;
+  // No SocketCAN devices detected on the system?
+  if CanSocket.Devices.Count = 0 then
+  begin
+    // Add a dummy one.
+    CbbDevices.Items.Add('vcan0');
+  end
+  // One or more SocketCAN device(s) detected on the system.
+  else
+  begin
+    // Loop through all detected devices.
+    for DeviceIndex := 0 to CanSocket.Devices.Count - 1 do
+    begin
+      // Add the device to the list.
+      CbbDevices.Items.Add(CanSocket.Devices[DeviceIndex]);
+    end;
+  end;
+  // Select the first one.
+  CbbDevices.ItemIndex := 0;
+end; //*** end of PopulateDevices ***
 
 
 //***************************************************************************************
@@ -103,51 +153,24 @@ end; //*** end of FormCreate ***
 //***************************************************************************************
 procedure TMainForm.BtnConnectClick(Sender: TObject);
 begin
-  FCanSocket.Device := FCanSocket.Devices[0];
-  if not FCanSocket.Connect then
+  // Currently not connected?
+  if not CanSocket.Connected then
   begin
-    MmoLog.Lines.Add('[ERROR] Could not connect to CAN device');
-  end;
-end; //*** end of BtnConnectClick ***
-
-
-//***************************************************************************************
-// NAME:           BtnDisconnectClick
-// PARAMETER:      Sender Source of the event.
-// DESCRIPTION:    Button click event handler.
-//
-//***************************************************************************************
-procedure TMainForm.BtnDisconnectClick(Sender: TObject);
-begin
-  FCanSocket.Disconnect;
-end; //*** end of BtnDisconnectClick ***
-
-
-//***************************************************************************************
-// NAME:           BtnListClick
-// PARAMETER:      Sender Source of the event.
-// DESCRIPTION:    Button click event handler.
-//
-//***************************************************************************************
-procedure TMainForm.BtnListClick(Sender: TObject);
-var
-  DeviceIndex: Integer;
-  DeviceStr: string;
-begin
-  if FCanSocket.Devices.Count = 0 then
-  begin
-    DeviceStr := 'No CAN devices detected';
+    // Configure the device based on the combobox selection.
+    CanSocket.Device := CbbDevices.Text;
+    // Connect to the CAN socket.
+    if not CanSocket.Connect then
+    begin
+      MmoLog.Lines.Add('[ERROR] Could not connect to CAN device');
+    end;
   end
+  // Currently connected.
   else
   begin
-    DeviceStr := 'Detected CAN devices:';
-    for DeviceIndex := 0 to FCanSocket.Devices.Count - 1 do
-    begin
-      DeviceStr := DeviceStr + (Format(' %s', [FCanSocket.Devices[DeviceIndex]]));
-    end;
+    // Disconnect from the CAN socket.
+    CanSocket.Disconnect;
   end;
-  MmoLog.Lines.Add(DeviceStr);
-end; //*** end of BtnListClick ***
+end; //*** end of BtnConnectClick ***
 
 
 //***************************************************************************************
@@ -161,34 +184,26 @@ var
   Msg: TCanMsg;
   Idx: Integer;
 begin
-  // Prepare the message.
-  Msg.Id := $123;
-  Msg.Ext := False;
-  Msg.Len := 8;
-  Msg.Flags.Fd := False;
-  Msg.Timestamp := 0;
-  for Idx := 0 to Msg.Len - 1 do
+  // Only transmit if actually connected.
+  if CanSocket.Connected then
   begin
-    Msg.Data[Idx] := Idx + 1;
-  end;
-  // Transmit the message.
-  if not FCanSocket.Transmit(Msg) then
-  begin
-    MmoLog.Lines.Add('[ERROR] Could not transmit CAN message');
+    // Prepare the message.
+    Msg.Id := $123;
+    Msg.Ext := False;
+    Msg.Len := 8;
+    Msg.Flags.Fd := False;
+    Msg.Timestamp := 0;
+    for Idx := 0 to Msg.Len - 1 do
+    begin
+      Msg.Data[Idx] := Idx + 1;
+    end;
+    // Transmit the message.
+    if not CanSocket.Transmit(Msg) then
+    begin
+      MmoLog.Lines.Add('[ERROR] Could not transmit CAN message');
+    end;
   end;
 end; //*** end of BtnTransmitClick ***
-
-
-//***************************************************************************************
-// NAME:           FormDestroy
-// PARAMETER:      Sender Source of the event.
-// DESCRIPTION:    Form destructor.
-//
-//***************************************************************************************
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  FCanSocket.Free;
-end; //*** end of FormDestroy ***
 
 
 //***************************************************************************************
@@ -200,7 +215,8 @@ end; //*** end of FormDestroy ***
 //***************************************************************************************
 procedure TMainForm.CanMsgTransmitted(Sender: TObject; constref Msg: TCanMsg);
 begin
-  MmoLog.Lines.Add(FCanSocket.FormatMsg(Msg));
+  // Show the CAN message in the log.
+  MmoLog.Lines.Add(CanSocket.FormatMsg(Msg));
 end; //*** end of CanMsgTransmitted ***
 
 
@@ -213,7 +229,8 @@ end; //*** end of CanMsgTransmitted ***
 //***************************************************************************************
 procedure TMainForm.CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
 begin
-  MmoLog.Lines.Add(FCanSocket.FormatMsg(Msg));
+  // Show the CAN message in the log.
+  MmoLog.Lines.Add(CanSocket.FormatMsg(Msg));
 end; //*** end of CanMsgReceived ***
 
 
@@ -225,7 +242,10 @@ end; //*** end of CanMsgReceived ***
 //***************************************************************************************
 procedure TMainForm.CanConnected(Sender: TObject);
 begin
-  MmoLog.Lines.Add(Format('Connected to CAN device %s', [FCanSocket.Device]));
+  // Update the user interface.
+  BtnConnect.Caption := 'Disconnect';
+  CbbDevices.Enabled := False;
+  MmoLog.Lines.Add(Format('Connected to CAN device %s', [CanSocket.Device]));
 end; //*** end of CanConnected ***
 
 
@@ -237,7 +257,10 @@ end; //*** end of CanConnected ***
 //***************************************************************************************
 procedure TMainForm.CanDisconnected(Sender: TObject);
 begin
-  MmoLog.Lines.Add(Format('Disconnected from CAN device %s', [FCanSocket.Device]));
+  // Update the user interface.
+  BtnConnect.Caption := 'Connect';
+  CbbDevices.Enabled := True;
+  MmoLog.Lines.Add(Format('Disconnected from CAN device %s', [CanSocket.Device]));
 end; //*** end of CanDisconnected ***
 
 
