@@ -93,7 +93,7 @@ type
       private
         FParent: TCanSocket;
         FEventMsg: TCanMsg;
-        procedure UpdateEvent;
+        procedure   UpdateEvent;
       protected
         procedure   Execute; override;
       public
