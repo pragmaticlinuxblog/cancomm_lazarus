@@ -65,6 +65,10 @@ type
     Timestamp: QWord;    // Message timestamp
   end;
 
+  //---------------------------------- TCanMsgTransmittedEvent --------------------------
+  // Event handler type for CAN message transmitted
+  TCanMsgTransmittedEvent = procedure(Sender: TObject; constref Msg: TCanMsg) of object;
+
   //---------------------------------- TCanMsgReceivedEvent -----------------------------
   // Event handler type for CAN message reception.
   TCanMsgReceivedEvent = procedure(Sender: TObject; constref Msg: TCanMsg) of object;
@@ -72,6 +76,14 @@ type
   //---------------------------------- TCanErrFrameReceivedEvent ------------------------
   // Event handler type for CAN error frame reception.
   TCanErrFrameReceivedEvent = procedure(Sender: TObject) of object;
+
+  //---------------------------------- TCanConnectedEvent -------------------------------
+  // Event handler type for CAN connected event.
+  TCanConnectedEvent = procedure(Sender: TObject) of object;
+
+  //---------------------------------- TCanDisconnectedEvent ----------------------------
+  // Event handler type for CAN disconnected event.
+  TCanDisconnectedEvent = procedure(Sender: TObject) of object;
 
   //---------------------------------- TCanSocket ---------------------------------------
   TCanSocket = class(TComponent)
@@ -90,8 +102,11 @@ type
       end;
   private
     FCanDevices: TCanDevices;
+    FOnMsgTransmitted: TCanMsgTransmittedEvent;
     FOnMsgReceived: TCanMsgReceivedEvent;
     FOnErrFrameReceived: TCanErrFrameReceivedEvent;
+    FOnConnected: TCanConnectedEvent;
+    FOnDisconnected: TCanDisconnectedEvent;
     FDevice: string;
     FEventThread: TCanThread;
     procedure   SetDevice(Value: string);
@@ -110,8 +125,11 @@ type
     property    Devices: TCanDevices read FCanDevices;
   published
     property    Device: string read FDevice write SetDevice;
-    property    OnMessage: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
+    property    OnTransmitted: TCanMsgTransmittedEvent read FOnMsgTransmitted write FOnMsgTransmitted;
+    property    OnReceived: TCanMsgReceivedEvent read FOnMsgReceived write FOnMsgReceived;
     property    OnErrorFrame: TCanErrFrameReceivedEvent read FOnErrFrameReceived write FOnErrFrameReceived;
+    property    OnConnected: TCanConnectedEvent read FOnConnected write FOnConnected;
+    property    OnDisconnected: TCanDisconnectedEvent read FOnDisconnected write FOnDisconnected;
   end;
 
 
@@ -251,8 +269,11 @@ begin
   inherited Create(AOwner);
   // Initialize fields.
   FConnected := False;
+  FOnMsgTransmitted :=  nil;
   FOnMsgReceived := nil;
   FOnErrFrameReceived := nil;
+  FOnConnected := nil;
+  FOnDisconnected := nil;
   // Create the CAN communication context.
   FCanContext := CanCommNew;
   // Make sure the context could be created.
@@ -384,6 +405,11 @@ begin
     begin
       FConnected := True;
       Result := True;
+      // Signal the event handler.
+      if Assigned(FOnConnected) then
+      begin
+        FOnConnected(Self);
+      end;
     end;
   end;
 end; //*** end of Connect ***
@@ -404,6 +430,11 @@ begin
     begin
       CanCommDisconnect(FCanContext);
       FConnected := False;
+      // Signal the event handler.
+      if Assigned(FOnDisconnected) then
+      begin
+        FOnDisconnected(Self);
+      end;
     end;
   end;
 end; //*** end of Disconnect ***
@@ -443,6 +474,12 @@ begin
     if CanCommTransmit(FCanContext, Msg.Id, Ext, Msg.Len, @Msg.Data[0], Flags,
                        Msg.Timestamp) = CANCOMM_TRUE then
     begin
+      // Signal the event handler.
+      if Assigned(FOnMsgTransmitted) then
+      begin
+        FOnMsgTransmitted(Self, Msg);
+      end;
+      // Update the result.
       Result := True;
     end;
   end;

@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 710
+  Left = 1062
   Height = 262
-  Top = 314
+  Top = 327
   Width = 477
   Caption = 'SocketCanDemo'
   ClientHeight = 262
