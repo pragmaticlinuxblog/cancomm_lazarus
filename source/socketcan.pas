@@ -8,7 +8,7 @@ unit socketcan;
 interface
 
 uses
-  CanComm, CanSocket, LazarusPackageIntf;
+  CanComm, CanSocket, CanDevices, LazarusPackageIntf;
 
 implementation
 
