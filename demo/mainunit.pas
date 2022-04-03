@@ -11,17 +11,23 @@ unit MainUnit;
 //---------------------------------------------------------------------------------------
 //                            L I C E N S E
 //---------------------------------------------------------------------------------------
-// This library is free software; you can redistribute it and/or  modify it under the
-// terms of the GNU Library General Public License as published by the Free Software
-// Foundation; either version 2 of the License, or (at your option) any later version.
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
-// This library is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-// PARTICULAR PURPOSE.  See the GNU Library General Public License for more details.
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
 //
-// You should have received a copy of the GNU Library General Public License along with
-// this library; if not, write to the Free Software Foundation, Inc., 51 Franklin Street,
-// Fifth Floor, Boston, MA  02110-1301  USA
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 //
 //***************************************************************************************
 {$IFDEF FPC}
@@ -46,14 +52,26 @@ type
     BtnConnect: TButton;
     BtnTransmit: TButton;
     CbbDevices: TComboBox;
+    CbbLen: TComboBox;
+    EdtData1: TEdit;
+    EdtData2: TEdit;
+    EdtData3: TEdit;
+    EdtData4: TEdit;
+    EdtData5: TEdit;
+    EdtData6: TEdit;
+    EdtData7: TEdit;
+    EdtId: TEdit;
+    EdtData0: TEdit;
     GbxConnection: TGroupBox;
     GbxTransmit: TGroupBox;
     GbxLog: TGroupBox;
+    LblId: TLabel;
+    LblLen: TLabel;
+    LblData: TLabel;
     MmoLog: TMemo;
     procedure BtnConnectClick(Sender: TObject);
     procedure BtnTransmitClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
   private
     CanSocket: TCanSocket;
     procedure PopulateDevices;
@@ -61,6 +79,8 @@ type
     procedure CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
     procedure CanConnected(Sender: TObject);
     procedure CanDisconnected(Sender: TObject);
+    procedure EditKeyPressHexOnly(Sender: TObject; var Key: Char);
+    procedure VerifyTransmitInfo;
   public
 
   end;
@@ -88,28 +108,28 @@ implementation
 //***************************************************************************************
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  // Create CAN socket.
+  // Create the CAN socket. Alternatively, you can add it to your form from the component
+  // palette.
   CanSocket := TCanSocket.Create(Self);
-  // Set the event handlers.
+  // Set the event handlers. If you added the TCanSocket to your form from the component
+  // palette, you can also set the event handlers using the object inspector.
   CanSocket.OnTransmitted := @CanMsgTransmitted;
   CanSocket.OnReceived := @CanMsgReceived;
   CanSocket.OnConnected :=  @CanConnected;
   CanSocket.OnDisconnected := @CanDisconnected;
+  // Set the key press event handlers to only allow input of hexadecimal characters.
+  EdtId.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData0.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData1.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData2.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData3.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData4.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData5.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData6.OnKeyPress := @EditKeyPressHexOnly;
+  EdtData7.OnKeyPress := @EditKeyPressHexOnly;
   // Refresh the devices in the combobox list.
   PopulateDevices;
 end; //*** end of FormCreate ***
-
-
-//***************************************************************************************
-// NAME:           FormDestroy
-// PARAMETER:      Sender Source of the event.
-// DESCRIPTION:    Form destructor.
-//
-//***************************************************************************************
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  CanSocket.Free;
-end; //*** end of FormDestroy ***
 
 
 //***************************************************************************************
@@ -182,21 +202,31 @@ end; //*** end of BtnConnectClick ***
 procedure TMainForm.BtnTransmitClick(Sender: TObject);
 var
   Msg: TCanMsg;
-  Idx: Integer;
 begin
+  // Validate the entered transmit data on the user interface and correct it, if needed.
+  VerifyTransmitInfo;
+  // Attempt to automatically connect, if not yet connected.
+  if not CanSocket.Connected then
+  begin
+    BtnConnectClick(Sender);
+  end;
   // Only transmit if actually connected.
   if CanSocket.Connected then
   begin
     // Prepare the message.
-    Msg.Id := $123;
+    Msg.Id :=  StrToDWord('$' + EdtId.Text);
+    Msg.Len := CbbLen.ItemIndex;
     Msg.Ext := False;
-    Msg.Len := 8;
     Msg.Flags.Fd := False;
     Msg.Timestamp := 0;
-    for Idx := 0 to Msg.Len - 1 do
-    begin
-      Msg.Data[Idx] := Idx + 1;
-    end;
+    Msg.Data[0] := StrToDWord('$' + EdtData0.Text);
+    Msg.Data[1] := StrToDWord('$' + EdtData1.Text);
+    Msg.Data[2] := StrToDWord('$' + EdtData2.Text);
+    Msg.Data[3] := StrToDWord('$' + EdtData3.Text);
+    Msg.Data[4] := StrToDWord('$' + EdtData4.Text);
+    Msg.Data[5] := StrToDWord('$' + EdtData5.Text);
+    Msg.Data[6] := StrToDWord('$' + EdtData6.Text);
+    Msg.Data[7] := StrToDWord('$' + EdtData7.Text);
     // Transmit the message.
     if not CanSocket.Transmit(Msg) then
     begin
@@ -262,6 +292,116 @@ begin
   CbbDevices.Enabled := True;
   MmoLog.Lines.Add(Format('Disconnected from CAN device %s', [CanSocket.Device]));
 end; //*** end of CanDisconnected ***
+
+
+//***************************************************************************************
+// NAME:           EditKeyPressHexOnly
+// PARAMETER:      Sender Source of the event.
+//                 Key The key's character code that was pressed.
+// DESCRIPTION:    Generic TEdit KeyPress handler allowing only hexadecimal numbers to be
+//                 entered.
+//
+//***************************************************************************************
+procedure TMainForm.EditKeyPressHexOnly(Sender: TObject; var Key: Char);
+begin
+  if not (Key In ['0'..'9', 'a'..'f', 'A'..'F', #8]) then // #8 = backspace
+  begin
+    // Ignore it
+    Key := #0;
+  end;
+  // Convert a..f to upper case
+  if Key In ['a'..'f'] then
+  begin
+    Key := UpCase(Key);
+  end;
+end; //*** end of EditKeyPressHexOnly ***
+
+
+//***************************************************************************************
+// NAME:           VerifyTransmitInfo
+// DESCRIPTION:    Checks if the entered info for the transmit message is actually valid.
+//                 If could for example happen that a user pasted a non-hex value into
+//                 the Id or Data edit boxes.
+//
+//***************************************************************************************
+procedure TMainForm.VerifyTransmitInfo;
+var
+  Value: LongWord;
+begin
+  // Convert the hexadecimal message identifier string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtId.Text, Value) then
+  begin
+    // Invalid hexadecimal value. Correct it.
+    EdtId.Text := '7FF';
+  end
+  // Valid hexadecimal string. Now check its range.
+  else
+  begin
+    if Value > $7FF then
+    begin
+      EdtId.Text := '7FF';
+    end;
+  end;
+
+  // Convert the hexadecimal message data 0 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData0.Text, Value) then
+  begin
+    EdtData0.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 1 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData1.Text, Value) then
+  begin
+    EdtData1.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 2 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData2.Text, Value) then
+  begin
+    EdtData2.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 3 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData3.Text, Value) then
+  begin
+    EdtData3.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 4 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData4.Text, Value) then
+  begin
+    EdtData4.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 5 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData5.Text, Value) then
+  begin
+    EdtData5.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 6 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData6.Text, Value) then
+  begin
+    EdtData6.Text := '00';
+  end;
+
+  // Convert the hexadecimal message data 7 string to an unsigned integer.
+  if not TryStrToDWord('$' + EdtData7.Text, Value) then
+  begin
+    EdtData7.Text := '00';
+  end;
+
+  // Set message identifier and data bytes to upper case.
+  EdtId.Text := UpperCase(EdtId.Text);
+  EdtData0.Text := UpperCase(EdtData0.Text);
+  EdtData1.Text := UpperCase(EdtData1.Text);
+  EdtData2.Text := UpperCase(EdtData2.Text);
+  EdtData3.Text := UpperCase(EdtData3.Text);
+  EdtData4.Text := UpperCase(EdtData4.Text);
+  EdtData5.Text := UpperCase(EdtData5.Text);
+  EdtData6.Text := UpperCase(EdtData6.Text);
+  EdtData7.Text := UpperCase(EdtData7.Text);
+end; //*** end of VerifyTransmitInfo ***
 
 
 end.
