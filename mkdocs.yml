@@ -1,0 +1,53 @@
+site_name: SocketCAN for Lazarus
+site_description: User Manual for SocketCAN for Lazarus, a CAN communication component based on the SocketCAN functionality of the Linux kernel.
+repo_url: https://github.com/pragmaticlinuxblog/cancomm_lazarus
+edit_uri: edit/main/docs/
+nav:
+  - Introduction: 'index.md'
+  - Getting started: 'getting_started.md'
+  - Reference:
+    - TCanSocket: 'tcansocket.md'
+    - TCanMsg: 'tcanmsg.md'
+    - TCanDevices: 'tcandevices.md'
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - toc.integrate
+    - navigation.top
+    - navigation.expand
+  palette: 
+    - scheme: default
+      primary: blue
+      accent: red
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+    - scheme: slate 
+      primary: blue
+      accent: red
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+plugins:
+  - search
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/pragmaticlinux
+      name: PragmaticLinux on Twitter
+    - icon: fontawesome/brands/pinterest
+      link: https://www.pinterest.com/pragmaticlinux
+      name: PragmaticLinux on Pinterest
+    - icon: fontawesome/brands/github
+      link: https://github.com/pragmaticlinuxblog
+      name: PragmaticLinux on GitHub
+copyright: Copyright &copy; 2022 by PragmaticLinux
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

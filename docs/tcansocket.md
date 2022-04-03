@@ -1,0 +1,13 @@
+TCanSocket
+
+
+
+## Properties
+
+
+
+## Methods
+
+
+
+## Events
