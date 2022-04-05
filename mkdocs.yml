@@ -8,7 +8,6 @@ nav:
   - Reference:
     - TCanSocket: 'tcansocket.md'
     - TCanMsg: 'tcanmsg.md'
-    - TCanDevices: 'tcandevices.md'
 theme:
   name: material
   icon:

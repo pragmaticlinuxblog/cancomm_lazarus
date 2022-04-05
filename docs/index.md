@@ -6,6 +6,7 @@ TODO
 
 * Lazarus (add link to install article)
 * LibCanComm (add link to install article or GitHub repo/docs)
+* Configured SocketCAN device (add links to tutorials)
 
 ## Installation
 
