@@ -1,4 +1,4 @@
- ![](images/TCanSocket.png) A Lazarus component for convenient and easy-to-use access to CAN communication, using the SocketCAN functionality of the Linux kernel.
+![](images/TCanSocket.png) A Lazarus component for convenient and easy-to-use access to CAN communication, using the SocketCAN functionality of the Linux kernel.
 
 ```pascal
 type TCanSocket = class(TComponent)

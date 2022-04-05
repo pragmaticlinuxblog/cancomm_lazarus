@@ -3,8 +3,7 @@ site_description: User Manual for SocketCAN for Lazarus, a CAN communication com
 repo_url: https://github.com/pragmaticlinuxblog/cancomm_lazarus
 edit_uri: edit/main/docs/
 nav:
-  - Introduction: 'index.md'
-  - Getting started: 'getting_started.md'
+  - Getting started: 'index.md'
   - Reference:
     - TCanSocket: 'tcansocket.md'
     - TCanMsg: 'tcanmsg.md'
