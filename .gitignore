@@ -76,3 +76,6 @@ SocketCanDemo
 # Lazarus project session files
 *.lps
 
+# Mkdocs generated site
+site/
+
