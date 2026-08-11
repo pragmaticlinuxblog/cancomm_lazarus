@@ -372,7 +372,7 @@ begin
     // Only continue if the specified index is valid.
     if Index < currentCtxPtr^.DevicesCnt then
     begin
-      // Determine the memory address when the device name for this index starts in the
+      // Determine the memory address where the device name for this index starts in the
       // list.
       deviceNamePtr := currentCtxPtr^.DevicesList;
       Inc(deviceNamePtr, Index * IFNAMSIZ);
