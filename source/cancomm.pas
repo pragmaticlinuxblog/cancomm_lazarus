@@ -278,8 +278,48 @@ end; //*** end of CanCommFree ***
 //
 //***************************************************************************************
 function CanCommDevicesBuildList(Context: TCanComm): Byte;
+var
+  currentCtxPtr: PCanCommCtx;
+  ifAddr: pifaddrs = Nil;
+  ifAddrOrig: pifaddrs = Nil;
 begin
+  // Initialize the result.
   Result := 0;
+  // Only continue with a valid parameter.
+  if Context <> nil then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Reset the devices count in the context.
+    currentCtxPtr^.DevicesCnt := 0;
+    // Attempt to obtain access to the linked list with network interfaces.
+    if getifaddrs(ifAddr) = 0 then
+    begin
+      // Create a copy of the original pointer before iterating through the interfaces.
+      ifAddrOrig := ifAddr;
+      // Loop through the linked list.
+      try
+        while ifAddr <> nil do
+        begin
+          // We are interested in the ifa_name element, so only process the node, when
+          // this one is valid.
+          if ifAddr^.ifa_name <> nil then
+          begin
+            // TODO ##Vg CONTINUE HERE...
+            //           Could consider making devices_list a TStringList. Just make sure
+            //           to keep the return value of CanCommDevicesName a PAnsiChar.
+          end;
+          // Continue with the next entry in the linked list.
+          ifAddr := ifAddr^.ifa_next;
+        end;
+      finally
+        // Free the list, now that we are done with it.
+        freeifaddrs(ifAddrOrig);
+      end;
+      // Update the result.
+      Result := Byte(currentCtxPtr^.DevicesCnt );
+    end;
+  end;
 end; //*** end of CanCommDevicesBuildList ***
 
 
