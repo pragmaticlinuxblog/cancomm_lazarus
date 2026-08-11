@@ -1,6 +1,6 @@
 unit CanComm;
 //***************************************************************************************
-//  Description: Unit with bindings for the LibCanComm shared library on Linux.
+//  Description: Unit that mimics the API of the LibCanComm shared library on Linux.
 //    File Name: cancomm.pas
 //
 //---------------------------------------------------------------------------------------
@@ -33,7 +33,8 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, CanUnix;
+
 
 //***************************************************************************************
 // Global constant declarations
@@ -62,27 +63,8 @@ type
 //***************************************************************************************
 // Function prototypes
 //***************************************************************************************
-//***************************************************************************************
-// NAME:           CanCommNew
-// RETURN VALUE:   Newly created context, if successful. nil otherwise.
-// DESCRIPTION:    Creates a new CAN communication context. All subsequent library
-//                 functions need this context.
-//
-//***************************************************************************************
-function CanCommNew: TCanComm;
-         cdecl; external CANCOMM_LIBNAME name 'cancomm_new';
-
-
-//***************************************************************************************
-// NAME:           CanCommFree
-// PARAMETER:      Context CAN communication context.
-// DESCRIPTION:    Releases the context. Should be called for each CAN communication
-//                 context, created with function cancomm_new(), once you no longer need
-//                 it.
-//
-//***************************************************************************************
+function  CanCommNew: TCanComm;
 procedure CanCommFree(Context: TCanComm);
-          cdecl; external CANCOMM_LIBNAME name 'cancomm_free';
 
 
 //***************************************************************************************
@@ -167,20 +149,7 @@ function CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
          cdecl; external CANCOMM_LIBNAME name 'cancomm_receive';
 
 
-//***************************************************************************************
-// NAME:           CanCommDevicesBuildlist
-// PARAMETER:      Context CAN communication context.
-// RETURN VALUE:   The total number of CAN devices currently present on the system, or 0
-//                 if none were found or in case of an error.
-// DESCRIPTION:    Builds a list with all the CAN device names currently present on the
-//                 system. Basically an internal array with strings such as can0, vcan0,
-//                 etc. Afterwards, you can call CanCommDevicesName() to retrieve the
-//                 name of a specific SocketCAN device, using its array index.
-//
-//***************************************************************************************
 function CanCommDevicesBuildList(Context: TCanComm): Byte;
-         cdecl; external CANCOMM_LIBNAME name 'cancomm_devices_buildlist';
-
 
 //***************************************************************************************
 // NAME:           CanCommDevicesName
@@ -200,6 +169,118 @@ function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
 
 
 implementation
+//***************************************************************************************
+// Local constant declarations
+//***************************************************************************************
+const
+  // Value of an invalid socket.
+  CANCOMM_INVALID_SOCKET = -1;
+
+
+//***************************************************************************************
+// Local type definitions
+//***************************************************************************************
+type
+  // Structure for grouping all CAN communication context related data. Basically the
+  // non-opaque counter part of TCanComm.
+  TCanCommCtx = record
+    // CAN raw socket handle. Also used to determine the connection state internally.
+    // CANCOMM_INVALID_SOCKET if not connected, any other value if connected.
+    Socket: LongInt;
+    // Boolean flag to determine if the CAN device is CAN classic or CAN FD.
+    FdEnabled: Byte;
+    // System time at which this module connected to the CAN network. Used to calculate
+    // zero based CAN message timestamps.
+    ConnectTime: QWord;
+    // Holds the number of CAN devices that were detected on the system.
+    DevicesCnt: LongWord;
+    // Pointer to an array of strings with the names of CAN devices that were detected on
+    // the system. Memory is allocated dynamically.
+    DevicesList: PChar;
+  end;
+  PCanCommCtx = ^TCanCommCtx;
+
+
+//***************************************************************************************
+// NAME:           CanCommNew
+// RETURN VALUE:   Newly created context, if successful. nil otherwise.
+// DESCRIPTION:    Creates a new CAN communication context. All subsequent library
+//                 functions need this context.
+//
+//***************************************************************************************
+function CanCommNew: TCanComm;
+var
+  newCtxPtr: PCanCommCtx;
+begin
+  // Initialize the result.
+  Result := nil;
+  // Allocate memory for the new context.
+  New(newCtxPtr);
+  // Only continue if memory could be allocated.
+  if newCtxPtr <> nil then
+  begin
+    // Initialize the context members.
+    newCtxPtr^.Socket := CANCOMM_INVALID_SOCKET;
+    newCtxPtr^.FdEnabled := CANCOMM_FALSE;
+    newCtxPtr^.ConnectTime := 0;
+    newCtxPtr^.DevicesCnt := 0;
+    newCtxPtr^.DevicesList := nil;
+    // Update the result.
+    Result := TCanComm(newCtxPtr);
+  end;
+end; //*** end of CanCommNew ***
+
+
+//***************************************************************************************
+// NAME:           CanCommFree
+// PARAMETER:      Context CAN communication context.
+// DESCRIPTION:    Releases the context. Should be called for each CAN communication
+//                 context, created with function cancomm_new(), once you no longer need
+//                 it.
+//
+//***************************************************************************************
+procedure CanCommFree(Context: TCanComm);
+var
+  currentCtxPtr: PCanCommCtx;
+begin
+  // Only continue with a valid parameter.
+  if Context <> nil then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Make sure to disconnect the CAN device.
+    CanCommDisconnect(Context);
+    // Release memory allocated for the devices list.
+    if currentCtxPtr^.DevicesList <> nil then
+    begin
+      // TODO ##Vg properly release the devices list.
+      //FreeMem(currentCtx^.devices_list);
+      currentCtxPtr^.DevicesList := nil;
+      currentCtxPtr^.DevicesCnt := 0;
+    end;
+    // Release the context's allocated memory.
+    Dispose(currentCtxPtr);
+    // Reset the pointer to prevent a dangling pointer.
+    currentCtxPtr := nil;
+  end;
+end; //*** end of CanCommFree ***
+
+
+//***************************************************************************************
+// NAME:           CanCommDevicesBuildlist
+// PARAMETER:      Context CAN communication context.
+// RETURN VALUE:   The total number of CAN devices currently present on the system, or 0
+//                 if none were found or in case of an error.
+// DESCRIPTION:    Builds a list with all the CAN device names currently present on the
+//                 system. Basically an internal array with strings such as can0, vcan0,
+//                 etc. Afterwards, you can call CanCommDevicesName() to retrieve the
+//                 name of a specific SocketCAN device, using its array index.
+//
+//***************************************************************************************
+function CanCommDevicesBuildList(Context: TCanComm): Byte;
+begin
+  Result := 0;
+end; //*** end of CanCommDevicesBuildList ***
 
 
 end.

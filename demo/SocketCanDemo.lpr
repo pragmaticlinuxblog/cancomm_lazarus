@@ -42,7 +42,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, mainunit
+  Forms, mainunit, CanDevices
   { you can add units after this };
 
 {$R *.res}
