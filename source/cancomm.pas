@@ -33,7 +33,7 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, CanUnix;
+  Classes, SysUtils, BaseUnix, CanUnix;
 
 
 //***************************************************************************************
@@ -150,22 +150,8 @@ function CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
 
 
 function CanCommDevicesBuildList(Context: TCanComm): Byte;
-
-//***************************************************************************************
-// NAME:           CanCommDevicesName
-// PARAMETER:      Context CAN communication context.
-//                 Index Zero based index into the device list.
-// RETURN VALUE:   The CAN device name at the specified index, or nil in case of an
-//                 error. Note that you can use StrPas() to convert the value to a
-//                 string.
-// DESCRIPTION:    Obtains the CAN device name at the specified index of the internal
-//                 list with CAN devices, created by function CanCommDevicesBuildList().
-//                 You could use this CAN device name when calling CanCommConnect().
-// ATTENTION:      Call CanCommDevicesBuildList() prior to calling this function.
-//
-//***************************************************************************************
 function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
-         cdecl; external CANCOMM_LIBNAME name 'cancomm_devices_name';
+
 
 
 implementation
@@ -199,6 +185,12 @@ type
     DevicesList: PChar;
   end;
   PCanCommCtx = ^TCanCommCtx;
+
+
+//***************************************************************************************
+// Local function prototypes
+//***************************************************************************************
+function CanCommDevicesIsCan(Name: PAnsiChar): Byte; forward;
 
 
 //***************************************************************************************
@@ -253,8 +245,7 @@ begin
     // Release memory allocated for the devices list.
     if currentCtxPtr^.DevicesList <> nil then
     begin
-      // TODO ##Vg properly release the devices list.
-      //FreeMem(currentCtx^.devices_list);
+      FreeMem(currentCtxPtr^.DevicesList);
       currentCtxPtr^.DevicesList := nil;
       currentCtxPtr^.DevicesCnt := 0;
     end;
@@ -281,8 +272,13 @@ function CanCommDevicesBuildList(Context: TCanComm): Byte;
 var
   currentCtxPtr: PCanCommCtx;
   ifAddr: pifaddrs = Nil;
-  ifAddrOrig: pifaddrs = Nil;
+  ifAddrHead: pifaddrs = Nil;
+  deviceNameEntryPtr: PAnsiChar;
+  deviceNameSrcPtr: PAnsiChar;
+  byteIdx: Integer;
 begin
+  // TODO ##Vg Consider converting DevicesList to a TStringList. Just make sure to
+  //           still give a PAnsiChar back from CanCommDevicesName.
   // Initialize the result.
   Result := 0;
   // Only continue with a valid parameter.
@@ -290,13 +286,13 @@ begin
   begin
     // Cast the opaque pointer to its non-opaque counter part.
     currentCtxPtr := PCanCommCtx(Context);
-    // Reset the devices count in the context.
+    // Reset the device count.
     currentCtxPtr^.DevicesCnt := 0;
     // Attempt to obtain access to the linked list with network interfaces.
     if getifaddrs(ifAddr) = 0 then
     begin
       // Create a copy of the original pointer before iterating through the interfaces.
-      ifAddrOrig := ifAddr;
+      ifAddrHead := ifAddr;
       // Loop through the linked list.
       try
         while ifAddr <> nil do
@@ -305,16 +301,41 @@ begin
           // this one is valid.
           if ifAddr^.ifa_name <> nil then
           begin
-            // TODO ##Vg CONTINUE HERE...
-            //           Could consider making devices_list a TStringList. Just make sure
-            //           to keep the return value of CanCommDevicesName a PAnsiChar.
+            // Check if this network interface is actually a CAN interface.
+            if CanCommDevicesIsCan(ifAddr^.ifa_name) = CANCOMM_TRUE then
+            begin
+              // Increment the devices count in the context.
+              Inc(currentCtxPtr^.DevicesCnt);
+              // Allocate memory in the devices list to store the device name.
+              try
+                ReAllocMem(currentCtxPtr^.DevicesList, currentCtxPtr^.DevicesCnt * IFNAMSIZ);
+              except
+                on E: EOutOfMemory do
+                  currentCtxPtr^.DevicesCnt := 0;
+              end;
+              // Only continue if the allocation was successful.
+              if currentCtxPtr^.DevicesCnt <> 0 then
+              begin
+                // Determine the address inside the device list, where to store the
+                // device name. It's basically the start of the newly allocated memory.
+                deviceNameEntryPtr := currentCtxPtr^.DevicesList;
+                Inc(deviceNameEntryPtr, (currentCtxPtr^.DevicesCnt - 1) * IFNAMSIZ);
+                // Set the address of the device name.
+                deviceNameSrcPtr := ifAddr^.ifa_name;
+                // Store the device name in the list.
+                for byteIdx := 0 to (IFNAMSIZ - 1) do
+                begin
+                  deviceNameEntryPtr[byteIdx] := deviceNameSrcPtr[byteIdx];
+                end;
+              end;
+            end;
           end;
           // Continue with the next entry in the linked list.
           ifAddr := ifAddr^.ifa_next;
         end;
       finally
         // Free the list, now that we are done with it.
-        freeifaddrs(ifAddrOrig);
+        freeifaddrs(ifAddrHead);
       end;
       // Update the result.
       Result := Byte(currentCtxPtr^.DevicesCnt );
@@ -322,6 +343,98 @@ begin
   end;
 end; //*** end of CanCommDevicesBuildList ***
 
+
+//***************************************************************************************
+// NAME:           CanCommDevicesName
+// PARAMETER:      Context CAN communication context.
+//                 Index Zero based index into the device list.
+// RETURN VALUE:   The CAN device name at the specified index, or nil in case of an
+//                 error. Note that you can use StrPas() to convert the value to a
+//                 string.
+// DESCRIPTION:    Obtains the CAN device name at the specified index of the internal
+//                 list with CAN devices, created by function CanCommDevicesBuildList().
+//                 You could use this CAN device name when calling CanCommConnect().
+// ATTENTION:      Call CanCommDevicesBuildList() prior to calling this function.
+//
+//***************************************************************************************
+function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
+var
+  currentCtxPtr: PCanCommCtx;
+  deviceNamePtr: PAnsiChar;
+begin
+  // Initialize the result.
+  Result := nil;
+  // Only continue with a valid parameter.
+  if Context <> nil then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Only continue if the specified index is valid.
+    if Index < currentCtxPtr^.DevicesCnt then
+    begin
+      // Determine the memory address when the device name for this index starts in the
+      // list.
+      deviceNamePtr := currentCtxPtr^.DevicesList;
+      Inc(deviceNamePtr, Index * IFNAMSIZ);
+      // Update the result.
+      Result := deviceNamePtr;
+    end;
+  end;
+end; //*** end of CanCommDevicesName ***
+
+
+//***************************************************************************************
+// NAME:           CanCommDevicesIsCan
+// PARAMETER:      Name: Network interface name. For example obtained by getifaddrs().
+// RETURN VALUE:   CANCOMM_TRUE is the specified network interface name is a CAN device,
+//                 CANCOMM_FALSE otherwise.
+// DESCRIPTION:    Determines if the specified network interface name is a CAN device.
+//
+//***************************************************************************************
+function CanCommDevicesIsCan(Name: PAnsiChar): Byte;
+var
+  ifr: tifreq;
+  canSocket: LongInt;
+  nameDestPtr: PAnsiChar;
+  nameSrcPtr: PAnsiChar;
+  byteIdx: Integer;
+begin
+  // Initialize the result.
+  Result := CANCOMM_FALSE;
+  // Only continue with valid parameter and acceptable length of the interface name.
+  if (Name <> nil) and (StrLen(Name) < IFNAMSIZ) then
+  begin
+    // Create an ifreq structure for passing data in and out of ioctl. Reset the
+    // sa_family element. Then set all bytes of the interface name to the \0 string
+    // termination. Then copy over all but the last byte, to make sure the last byte is
+    // always also a \0 string termination.
+    ifr.ifr_hwaddr.sa_family := 0;
+    FillChar(ifr.ifr_name, IFNAMSIZ, 0);
+    nameDestPtr := ifr.ifr_name;
+    nameSrcPtr := Name;
+    for byteIdx := 0 to (IFNAMSIZ - 2) do
+    begin
+      nameDestPtr[byteIdx] := nameSrcPtr[byteIdx];
+    end;
+    // Get open socket descriptor.
+    canSocket := socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if canSocket <> -1 then
+    begin
+      // Obtain the hardware address information.
+      if FpIOCtl(canSocket, TIOCtlRequest(SIOCGIFHWADDR), @ifr) <> -1 then
+      begin
+        // Is this a CAN device?
+        if ifr.ifr_hwaddr.sa_family = ARPHRD_CAN then
+        begin
+          // Update the result accordingly.
+          Result := CANCOMM_TRUE;
+        end;
+      end;
+      // Close the socket, now that we are done with it.
+      FpClose(canSocket);
+    end;
+  end;
+end; //*** end of CanCommDevicesIsCan ***
 
 end.
 //******************************** end of cancomm.pas ***********************************

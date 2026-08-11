@@ -1,6 +1,7 @@
 unit CanUnix;
 //***************************************************************************************
-//  Description: CAN Unix unit.
+//  Description: CAN Unix unit. Exposes Unix related constants, types and functions that
+//               are not yet offered by BaseUnix.
 //    File Name: canunix.pas
 //
 //---------------------------------------------------------------------------------------
@@ -33,14 +34,20 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, BaseUnix;
+  Classes, SysUtils, ctypes;
 
 
 //***************************************************************************************
 // Global constant declarations
 //***************************************************************************************
 const
-  AF_INET = 2;
+  AF_INET          = 2;
+  PF_CAN           = 29;
+  SOCK_RAW         = 3;
+  CAN_RAW          = 1;
+  SIOCGIFHWADDR    = $8927;
+  ARPHRD_CAN       = 280;
+  IFNAMSIZ         = 16;
 
 
 //***************************************************************************************
@@ -48,32 +55,42 @@ const
 //***************************************************************************************
 type
   psockaddr = ^tsockaddr;
-  tsockaddr = record
+  tsockaddr = packed record
     sa_family: word;
     sa_data: array[0..13] of byte;
   end;
 
   pifaddrs = ^tifaddrs;
-  tifaddrs = record
+  tifaddrs = packed record
     ifa_next: pifaddrs;
     ifa_name: pchar;
     ifa_flags: cardinal;
+    _padding: Cardinal;     // explicit pad to match C struct layout
     ifa_addr: psockaddr;
     ifa_netmask: psockaddr;
-    ifa_ifu: record
-      case byte of
-        0: (ifu_broadaddr: psockaddr);
-        1: (ifu_dstaddr: psockaddr);
-    end;
+    ifa_ifu: pointer;       // union treated as single pointer
     ifa_data: pointer;
   end;
+
+  tifreq = packed record
+    ifr_name: array[0..IFNAMSIZ - 1] of Char;
+    case Byte of
+      0: (ifr_hwaddr: Tsockaddr);
+      1: (_padding: array[0..23] of Byte);
+  end;
+
 
 //***************************************************************************************
 // Function prototypes
 //***************************************************************************************
-function getifaddrs(var ifap: pifaddrs): cint; cdecl; external 'c' name 'getifaddrs';
-procedure freeifaddrs(ifa: pifaddrs); cdecl; external 'c' name 'freeifaddrs';
+function  getifaddrs(var ifap: pifaddrs): cint;
+          cdecl; external 'c' name 'getifaddrs';
+procedure freeifaddrs(ifa: pifaddrs);
+          cdecl; external 'c' name 'freeifaddrs';
+function  socket(domain, socktype, protocol: cint): cint;
+          cdecl; external 'c' name 'socket';
 
+// TODO ##Vg Could consider just adding this to the CanComm unit directly.
 
 implementation
 
