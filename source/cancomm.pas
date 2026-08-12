@@ -162,6 +162,7 @@ type
 // Local function prototypes
 //***************************************************************************************
 function CanCommDevicesIsCan(Name: PAnsiChar): Byte; forward;
+function CanCommSanitizeFrameLen(Len: Byte): Byte; forward;
 
 
 //***************************************************************************************
@@ -512,7 +513,7 @@ end; //*** end of CanCommDevicesName ***
 
 //***************************************************************************************
 // NAME:           CanCommDevicesIsCan
-// PARAMETER:      Name: Network interface name. For example obtained by getifaddrs().
+// PARAMETER:      Name Network interface name. For example obtained by getifaddrs().
 // RETURN VALUE:   CANCOMM_TRUE is the specified network interface name is a CAN device,
 //                 CANCOMM_FALSE otherwise.
 // DESCRIPTION:    Determines if the specified network interface name is a CAN device.
@@ -554,6 +555,54 @@ begin
     end;
   end;
 end; //*** end of CanCommDevicesIsCan ***
+
+
+//***************************************************************************************
+// NAME:           CanCommSanitizeFrameLen
+// PARAMETER:      Len Unsanitized frame length. 0..64.
+// RETURN VALUE:   Sanitized frame length in the range 0..8, 12, 16, 20, 24, 32, 48, 64.
+// DESCRIPTION:    Helper function to sanitize the CAN frame length, specifically for
+//                 CAN FD. On CAN FD, the frame lengths can be: 0..8, 12, 16, 20, 24, 32,
+//                 48, 64. This means that if a frame length of 14 is specified, it
+//                 should be rounded up to the next supported frame length value, 16 in
+//                 this case.
+//
+//***************************************************************************************
+function CanCommSanitizeFrameLen(Len: Byte): Byte;
+const
+  len2dlc: array[0..64] of Byte = (
+     0,  1,  2,  3,  4,  5,  6,  7,  8,    {  0 -  8 }
+     9,  9,  9,  9,                        {  9 - 12 }
+    10, 10, 10, 10,                        { 13 - 16 }
+    11, 11, 11, 11,                        { 17 - 20 }
+    12, 12, 12, 12,                        { 21 - 24 }
+    13, 13, 13, 13, 13, 13, 13, 13,        { 25 - 32 }
+    14, 14, 14, 14, 14, 14, 14, 14,        { 33 - 40 }
+    14, 14, 14, 14, 14, 14, 14, 14,        { 41 - 48 }
+    15, 15, 15, 15, 15, 15, 15, 15,        { 49 - 56 }
+    15, 15, 15, 15, 15, 15, 15, 15         { 57 - 64 }
+  );
+  dlc2len: array[0..15] of Byte = (
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64
+  );
+var
+  frameLen: Byte;
+  frameDlc: Byte;
+begin
+  // Make sure the specified len parameter is valid. If not, correct it.
+  if len > CANFD_MAX_DLEN then
+  begin
+    frameLen := CANFD_MAX_DLEN
+  end
+  else
+  begin
+    frameLen := len;
+  end;
+  // Convert the lenght value to the CAN FD dlc value (0..15).
+  frameDlc := len2dlc[frameLen];
+  // Convert the CAN FD dlc value to its representive frame length value.
+  Result := dlc2len[frameDlc];
+end; //*** end of CanCommSanitizeFrameLen ***
 
 end.
 //******************************** end of cancomm.pas ***********************************
