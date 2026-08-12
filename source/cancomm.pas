@@ -180,9 +180,8 @@ type
     ConnectTime: QWord;
     // Holds the number of CAN devices that were detected on the system.
     DevicesCnt: LongWord;
-    // Pointer to an array of strings with the names of CAN devices that were detected on
-    // the system. Memory is allocated dynamically.
-    DevicesList: PChar;
+    // List of strings with the names of CAN devices that were detected on the system.
+    DevicesList: TStringList;
   end;
   PCanCommCtx = ^TCanCommCtx;
 
@@ -216,7 +215,7 @@ begin
     newCtxPtr^.FdEnabled := CANCOMM_FALSE;
     newCtxPtr^.ConnectTime := 0;
     newCtxPtr^.DevicesCnt := 0;
-    newCtxPtr^.DevicesList := nil;
+    newCtxPtr^.DevicesList := TStringList.Create;
     // Update the result.
     Result := TCanComm(newCtxPtr);
   end;
@@ -242,13 +241,9 @@ begin
     currentCtxPtr := PCanCommCtx(Context);
     // Make sure to disconnect the CAN device.
     CanCommDisconnect(Context);
-    // Release memory allocated for the devices list.
-    if currentCtxPtr^.DevicesList <> nil then
-    begin
-      FreeMem(currentCtxPtr^.DevicesList);
-      currentCtxPtr^.DevicesList := nil;
-      currentCtxPtr^.DevicesCnt := 0;
-    end;
+    // Empty the devices list.
+    currentCtxPtr^.DevicesList.Free;
+    currentCtxPtr^.DevicesCnt := 0;
     // Release the context's allocated memory.
     Dispose(currentCtxPtr);
     // Reset the pointer to prevent a dangling pointer.
@@ -273,12 +268,7 @@ var
   currentCtxPtr: PCanCommCtx;
   ifAddr: pifaddrs = Nil;
   ifAddrHead: pifaddrs = Nil;
-  deviceNameEntryPtr: PAnsiChar;
-  deviceNameSrcPtr: PAnsiChar;
-  byteIdx: Integer;
 begin
-  // TODO ##Vg Consider converting DevicesList to a TStringList. Just make sure to
-  //           still give a PAnsiChar back from CanCommDevicesName.
   // Initialize the result.
   Result := 0;
   // Only continue with a valid parameter.
@@ -286,8 +276,9 @@ begin
   begin
     // Cast the opaque pointer to its non-opaque counter part.
     currentCtxPtr := PCanCommCtx(Context);
-    // Reset the device count.
+    // Reset the device count and clear the device name list.
     currentCtxPtr^.DevicesCnt := 0;
+    currentCtxPtr^.DevicesList.Clear;
     // Attempt to obtain access to the linked list with network interfaces.
     if getifaddrs(ifAddr) = 0 then
     begin
@@ -304,30 +295,9 @@ begin
             // Check if this network interface is actually a CAN interface.
             if CanCommDevicesIsCan(ifAddr^.ifa_name) = CANCOMM_TRUE then
             begin
-              // Increment the devices count in the context.
+              // Increment the devices count in the context and add it to the list.
               Inc(currentCtxPtr^.DevicesCnt);
-              // Allocate memory in the devices list to store the device name.
-              try
-                ReAllocMem(currentCtxPtr^.DevicesList, currentCtxPtr^.DevicesCnt * IFNAMSIZ);
-              except
-                on E: EOutOfMemory do
-                  currentCtxPtr^.DevicesCnt := 0;
-              end;
-              // Only continue if the allocation was successful.
-              if currentCtxPtr^.DevicesCnt <> 0 then
-              begin
-                // Determine the address inside the device list, where to store the
-                // device name. It's basically the start of the newly allocated memory.
-                deviceNameEntryPtr := currentCtxPtr^.DevicesList;
-                Inc(deviceNameEntryPtr, (currentCtxPtr^.DevicesCnt - 1) * IFNAMSIZ);
-                // Set the address of the device name.
-                deviceNameSrcPtr := ifAddr^.ifa_name;
-                // Store the device name in the list.
-                for byteIdx := 0 to (IFNAMSIZ - 1) do
-                begin
-                  deviceNameEntryPtr[byteIdx] := deviceNameSrcPtr[byteIdx];
-                end;
-              end;
+              currentCtxPtr^.DevicesList.Add(ifAddr^.ifa_name);
             end;
           end;
           // Continue with the next entry in the linked list.
@@ -360,7 +330,6 @@ end; //*** end of CanCommDevicesBuildList ***
 function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
 var
   currentCtxPtr: PCanCommCtx;
-  deviceNamePtr: PAnsiChar;
 begin
   // Initialize the result.
   Result := nil;
@@ -372,12 +341,8 @@ begin
     // Only continue if the specified index is valid.
     if Index < currentCtxPtr^.DevicesCnt then
     begin
-      // Determine the memory address where the device name for this index starts in the
-      // list.
-      deviceNamePtr := currentCtxPtr^.DevicesList;
-      Inc(deviceNamePtr, Index * IFNAMSIZ);
       // Update the result.
-      Result := deviceNamePtr;
+      Result := PAnsiChar(currentCtxPtr^.DevicesList[Index]);
     end;
   end;
 end; //*** end of CanCommDevicesName ***
@@ -395,9 +360,6 @@ function CanCommDevicesIsCan(Name: PAnsiChar): Byte;
 var
   ifr: tifreq;
   canSocket: LongInt;
-  nameDestPtr: PAnsiChar;
-  nameSrcPtr: PAnsiChar;
-  byteIdx: Integer;
 begin
   // Initialize the result.
   Result := CANCOMM_FALSE;
@@ -410,12 +372,7 @@ begin
     // always also a \0 string termination.
     ifr.ifr_hwaddr.sa_family := 0;
     FillChar(ifr.ifr_name, IFNAMSIZ, 0);
-    nameDestPtr := ifr.ifr_name;
-    nameSrcPtr := Name;
-    for byteIdx := 0 to (IFNAMSIZ - 2) do
-    begin
-      nameDestPtr[byteIdx] := nameSrcPtr[byteIdx];
-    end;
+    Move(Name^, ifr.ifr_name, IFNAMSIZ - 1);
     // Get open socket descriptor.
     canSocket := socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if canSocket <> -1 then

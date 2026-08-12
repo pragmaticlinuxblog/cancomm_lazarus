@@ -55,24 +55,24 @@ const
 //***************************************************************************************
 type
   psockaddr = ^tsockaddr;
-  tsockaddr = packed record
+  tsockaddr = record
     sa_family: word;
     sa_data: array[0..13] of byte;
   end;
 
   pifaddrs = ^tifaddrs;
-  tifaddrs = packed record
+  tifaddrs = record
     ifa_next: pifaddrs;
     ifa_name: pchar;
     ifa_flags: cardinal;
-    _padding: Cardinal;     // explicit pad to match C struct layout
+    _padding: cardinal;     // explicit pad to match C struct layout
     ifa_addr: psockaddr;
     ifa_netmask: psockaddr;
     ifa_ifu: pointer;       // union treated as single pointer
     ifa_data: pointer;
   end;
 
-  tifreq = packed record
+  tifreq = record
     ifr_name: array[0..IFNAMSIZ - 1] of Char;
     case Byte of
       0: (ifr_hwaddr: Tsockaddr);
