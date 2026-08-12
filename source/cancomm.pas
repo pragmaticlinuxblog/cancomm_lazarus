@@ -1,6 +1,7 @@
 unit CanComm;
 //***************************************************************************************
-//  Description: Unit that mimics the API of the LibCanComm shared library on Linux.
+//  Description: Unit that mimics the API of the LibCanComm shared library on Linux
+//               (https://github.com/pragmaticlinuxblog/cancomm).
 //    File Name: cancomm.pas
 //
 //---------------------------------------------------------------------------------------
@@ -41,6 +42,7 @@ uses
 //***************************************************************************************
 const
   // Name of the external library.
+  // TODO ##Vg Can be removed once the rework is done.
   CANCOMM_LIBNAME = 'cancomm';
   // Boolean true value.
   CANCOMM_TRUE = 1;
@@ -63,6 +65,7 @@ type
 //***************************************************************************************
 // Function prototypes
 //***************************************************************************************
+// API for obtaining a context, allowing multiple applications to use this library.
 function  CanCommNew: TCanComm;
 procedure CanCommFree(Context: TCanComm);
 function  CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
@@ -121,9 +124,9 @@ function CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
          cdecl; external CANCOMM_LIBNAME name 'cancomm_receive';
 
 
+// API for obtaining CAN device names on the system (can0, vcan0, etc.).
 function CanCommDevicesBuildList(Context: TCanComm): Byte;
 function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
-
 
 
 implementation
