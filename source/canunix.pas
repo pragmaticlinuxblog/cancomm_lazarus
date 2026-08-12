@@ -58,6 +58,7 @@ const
   F_GETFL            = 3;
   F_SETFL            = 4;
   O_NONBLOCK         = 2048;
+  CANFD_MAX_DLEN     = 64;
 
 
 //***************************************************************************************
@@ -112,7 +113,7 @@ procedure freeifaddrs(ifa: pifaddrs);
           cdecl; external 'c' name 'freeifaddrs';
 function  socket(domain, socktype, protocol: cint): cint;
           cdecl; external 'c' name 'socket';
-function setsockopt(sockfd: cint; level, optname: cint; optval: Pointer; optlen: cuint): cint;
+function  setsockopt(sockfd: cint; level, optname: cint; optval: Pointer; optlen: cuint): cint;
           cdecl; external 'c' name 'setsockopt';
 function  bind(sockfd: cint; addr: Pointer; addrlen: cuint): cint;
           cdecl; external 'c' name 'bind';
