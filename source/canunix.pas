@@ -1,7 +1,7 @@
 unit CanUnix;
 //***************************************************************************************
 //  Description: CAN Unix unit. Exposes Unix related constants, types and functions that
-//               are not yet offered by BaseUnix.
+//               are not yet offered by the Unix or BaseUnix units.
 //    File Name: canunix.pas
 //
 //---------------------------------------------------------------------------------------
@@ -65,6 +65,7 @@ type
     ifa_next: pifaddrs;
     ifa_name: pchar;
     ifa_flags: cardinal;
+    // TODO ##Vg I don't think this padding is actually needed...test.
     _padding: cardinal;     // explicit pad to match C struct layout
     ifa_addr: psockaddr;
     ifa_netmask: psockaddr;

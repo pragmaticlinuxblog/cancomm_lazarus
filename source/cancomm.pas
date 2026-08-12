@@ -33,7 +33,7 @@ interface
 // Global includes
 //***************************************************************************************
 uses
-  Classes, SysUtils, BaseUnix, CanUnix;
+  Classes, SysUtils, Unix, BaseUnix, CanUnix;
 
 
 //***************************************************************************************
