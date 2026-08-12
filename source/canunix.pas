@@ -90,7 +90,6 @@ procedure freeifaddrs(ifa: pifaddrs);
 function  socket(domain, socktype, protocol: cint): cint;
           cdecl; external 'c' name 'socket';
 
-// TODO ##Vg Could consider just adding this to the CanComm unit directly.
 
 implementation
 
