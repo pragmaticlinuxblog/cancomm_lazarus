@@ -455,11 +455,11 @@ begin
           if ifAddr^.ifa_name <> nil then
           begin
             // Check if this network interface is actually a CAN interface.
-            if CanCommDevicesIsCan(ifAddr^.ifa_name) = CANCOMM_TRUE then
+            if CanCommDevicesIsCan(PChar(ifAddr^.ifa_name)) = CANCOMM_TRUE then
             begin
               // Increment the devices count in the context and add it to the list.
               Inc(currentCtxPtr^.DevicesCnt);
-              currentCtxPtr^.DevicesList.Add(ifAddr^.ifa_name);
+              currentCtxPtr^.DevicesList.Add(PChar(ifAddr^.ifa_name));
             end;
           end;
           // Continue with the next entry in the linked list.

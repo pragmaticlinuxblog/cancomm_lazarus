@@ -66,15 +66,15 @@ const
 type
   psockaddr = ^tsockaddr;
   tsockaddr = record
-    sa_family: word;
-    sa_data: array[0..13] of byte;
+    sa_family: cushort;
+    sa_data: array[0..13] of cuchar;
   end;
 
   pifaddrs = ^tifaddrs;
   tifaddrs = record
     ifa_next: pifaddrs;
-    ifa_name: pchar;
-    ifa_flags: cardinal;
+    ifa_name: pcchar;
+    ifa_flags: cuint;
     ifa_addr: psockaddr;
     ifa_netmask: psockaddr;
     ifa_ifu: pointer;       // union treated as single pointer
