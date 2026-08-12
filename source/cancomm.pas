@@ -70,31 +70,8 @@ function  CanCommNew: TCanComm;
 procedure CanCommFree(Context: TCanComm);
 function  CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
 procedure CanCommDisconnect(Context: TCanComm);
-
-
-//***************************************************************************************
-// NAME:           CanCommTransmit
-// PARAMETER:      Context CAN communication context.
-//                 Id CAN message identifier.
-//                 Ext CANCOMM_FALSE for an 11-bit message identifier, CANCOMM_TRUE for
-//                 29-bit.
-//                 Len Number of CAN message data bytes.
-//                 PData Pointer to array with data bytes.
-//                 Flags Bit flags for providing additional information about how to
-//                       transmit the message:
-//                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
-//                                                  classic. Ignored for non CAN FD
-//                                                  SocketCAN devices.
-//                 PTimestamp Pointer to where the timestamp (microseconds) of the
-//                 message is stored.
-// RETURN VALUE:   CANCOMM_TRUE if successfully submitted the message for transmission.
-//                 CANCOMM_FALSE otherwise.
-// DESCRIPTION:    Submits a CAN message for transmission.
-//
-//***************************************************************************************
 function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
                          PData: PByte; Flags: Byte; out Timestamp: QWord): Byte;
-         cdecl; external CANCOMM_LIBNAME name 'cancomm_transmit';
 
 
 //***************************************************************************************
@@ -274,8 +251,7 @@ begin
     FillChar(ifr.ifr_name, IFNAMSIZ, 0);
     Move(Device^, ifr.ifr_name, IFNAMSIZ - 1);
     // Get current system time.
-    tv.tv_sec := 0;
-    tv.tv_usec := 0;
+    tv := Default(TTimeVal);
     if fpgettimeofday(@tv, nil) = 0 then
     begin
       // Convert the current time to microseconds and store it as the connection start
@@ -416,6 +392,97 @@ begin
     end;
   end;
 end; //*** end of CanCommDisconnect ***
+
+
+//***************************************************************************************
+// NAME:           CanCommTransmit
+// PARAMETER:      Context CAN communication context.
+//                 Id CAN message identifier.
+//                 Ext CANCOMM_FALSE for an 11-bit message identifier, CANCOMM_TRUE for
+//                 29-bit.
+//                 Len Number of CAN message data bytes.
+//                 PData Pointer to array with data bytes.
+//                 Flags Bit flags for providing additional information about how to
+//                       transmit the message:
+//                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
+//                                                  classic. Ignored for non CAN FD
+//                                                  SocketCAN devices.
+//                 PTimestamp Pointer to where the timestamp (microseconds) of the
+//                 message is stored.
+// RETURN VALUE:   CANCOMM_TRUE if successfully submitted the message for transmission.
+//                 CANCOMM_FALSE otherwise.
+// DESCRIPTION:    Submits a CAN message for transmission.
+//
+//***************************************************************************************
+function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
+                         PData: PByte; Flags: Byte; out Timestamp: QWord): Byte;
+var
+  currentCtxPtr: PCanCommCtx;
+  frameLenMax :Byte;
+  frameSizeMax: TSize;
+  canTxFrame: tcanfd_frame;
+  idx: Byte;
+  tv: TTimeVal;
+begin
+  // Initialize the result.
+  Result := CANCOMM_FALSE;
+  // Initialize the transmit frame.
+  canTxFrame := Default(tcanfd_frame);
+  // Only continue with a valid parameters.
+  if (Context <> nil) and (Len <= CANFD_MAX_DLEN) and (PData <> nil) then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Only transmit if actually connected.
+    if currentCtxPtr^.Socket <> CANCOMM_INVALID_SOCKET then
+    begin
+      // Initialize the settings as if the message will be CAN classic.
+      frameLenMax := CAN_MAX_DLEN;
+      frameSizeMax := CAN_MTU;
+      // Should the message be transmitted as CAN FD?
+      if (currentCtxPtr^.FdEnabled = CANCOMM_TRUE) and ((flags and CANCOMM_FLAG_CANFD_MSG) <> 0) then
+      begin
+        // Update the settings for the mesasge to be CAN FD.
+        frameLenMax := CANFD_MAX_DLEN;
+        frameSizeMax := CANFD_MTU;
+        // Configure the bit rate switch when transmitting messages in CAN FD mode.
+        canTxFrame.flags := canTxFrame.flags or CANFD_BRS;
+      end;
+      // Only transmit if all the data actually fits.
+      if Len <= frameLenMax then
+      begin
+        // Construct the transmit frame.
+        canTxFrame.can_id := Id;
+        if (Ext = CANCOMM_TRUE) then
+        begin
+          canTxFrame.can_id := canTxFrame.can_id or CAN_EFF_FLAG;
+        end;
+        // Sanitize the frame length before storing it.
+        canTxFrame.len := CanCommSanitizeFrameLen(Len);
+        for idx := 0 to (len - 1) do
+        begin
+          canTxFrame.data[idx] := PData[idx];
+        end;
+        // Request transmission of the frame.
+        if FpWrite(currentCtxPtr^.Socket, @canTxFrame, frameSizeMax) = frameSizeMax then
+        begin
+          Timestamp := 0;
+          // Get current system time.
+          tv := Default(TTimeVal);
+          if fpgettimeofday(@tv, nil) = 0 then
+          begin
+            // Convert the timestamp to microseconds.
+            Timestamp := (Int64(tv.tv_sec) * 1000000) + tv.tv_usec;
+            // Make the timestamp relative to the connection time.
+            Timestamp := Timestamp - currentCtxPtr^.ConnectTime;
+          end;
+          // Successfully submitted for transmission. Update the result accordingly.
+          Result := CANCOMM_TRUE;
+        end;
+      end;
+    end;
+  end;
+end; //*** end of CanCommTransmit ***
 
 
 //***************************************************************************************

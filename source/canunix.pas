@@ -59,6 +59,9 @@ const
   F_SETFL            = 4;
   O_NONBLOCK         = 2048;
   CANFD_MAX_DLEN     = 64;
+  CAN_MAX_DLEN       = 8;
+  CANFD_BRS          = $01;
+  CAN_EFF_FLAG       = $80000000;
 
 
 //***************************************************************************************
@@ -85,15 +88,15 @@ type
   tifreq = record
     ifr_name: array[0..IFNAMSIZ - 1] of Char;
     case Integer of
-      0: (ifr_addr:      tsockaddr);
-      1: (ifr_dstaddr:   tsockaddr);
+      0: (ifr_addr: tsockaddr);
+      1: (ifr_dstaddr: tsockaddr);
       2: (ifr_broadaddr: tsockaddr);
-      3: (ifr_netmask:   tsockaddr);
-      4: (ifr_hwaddr:    tsockaddr);
-      5: (ifr_flags:     cshort);
-      6: (ifr_ifindex:   cint);
-      7: (ifr_metric:    cint);
-      8: (ifr_mtu:       cint);
+      3: (ifr_netmask: tsockaddr);
+      4: (ifr_hwaddr: tsockaddr);
+      5: (ifr_flags: cshort);
+      6: (ifr_ifindex: cint);
+      7: (ifr_metric: cint);
+      8: (ifr_mtu: cint);
   end;
 
   tsockaddr_can = record
@@ -101,6 +104,15 @@ type
     can_ifindex:  cint;
     can_rx_id:    culong;
     can_tx_id:    culong;
+  end;
+
+  tcanfd_frame = record
+    can_id: cuint;   // 32 bit CAN_ID + EFF/RTR/ERR flags
+    len: cuchar;     // frame payload length in byte
+    flags: cuchar;   // additional flags for CAN FD
+    __res0: cuchar;  // reserved / padding
+    __res1: cuchar;  // reserved / padding
+    data: array[0..CANFD_MAX_DLEN - 1] of cuchar;
   end;
 
 
