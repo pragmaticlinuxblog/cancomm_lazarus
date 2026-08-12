@@ -65,28 +65,7 @@ type
 //***************************************************************************************
 function  CanCommNew: TCanComm;
 procedure CanCommFree(Context: TCanComm);
-
-
-//***************************************************************************************
-// NAME:           CanCommConnect
-// PARAMETER:      Context CAN communication context.
-//                 Device Null terminated string with the SocketCAN device name, e.g.
-//                 PAnsiChar(AnsiString('can0'))
-// RETURN VALUE:   CANCOMM_TRUE if successfully connected to the SocketCAN device.
-//                 CANCOMM_FALSE otherwise.
-// DESCRIPTION:    Connects to the specified SocketCAN device. Note that you can use the
-//                 functions cancomm_devices_buildlist() and cancomm_devices_name() to
-//                 determine the names of the SocketCAN devices known to the system.
-//                 Alternatively, you can run command "ip addr" in the terminal to find
-//                 out about the SocketCAN devices know to the system.
-//                 This function automatically figures out if the SocketCAN device
-//                 supports CAN FD, in addition to CAN classic.
-//
-//***************************************************************************************
-function CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
-         cdecl; external CANCOMM_LIBNAME name 'cancomm_connect';
-
-
+function  CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
 procedure CanCommDisconnect(Context: TCanComm);
 
 
@@ -243,6 +222,171 @@ begin
     currentCtxPtr := nil;
   end;
 end; //*** end of CanCommFree ***
+
+
+//***************************************************************************************
+// NAME:           CanCommConnect
+// PARAMETER:      Context CAN communication context.
+//                 Device Null terminated string with the SocketCAN device name, e.g.
+//                 PAnsiChar(AnsiString('can0'))
+// RETURN VALUE:   CANCOMM_TRUE if successfully connected to the SocketCAN device.
+//                 CANCOMM_FALSE otherwise.
+// DESCRIPTION:    Connects to the specified SocketCAN device. Note that you can use the
+//                 functions cancomm_devices_buildlist() and cancomm_devices_name() to
+//                 determine the names of the SocketCAN devices known to the system.
+//                 Alternatively, you can run command "ip addr" in the terminal to find
+//                 out about the SocketCAN devices know to the system.
+//                 This function automatically figures out if the SocketCAN device
+//                 supports CAN FD, in addition to CAN classic.
+//
+//***************************************************************************************
+function CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
+var
+  currentCtxPtr: PCanCommCtx;
+  ifr: tifreq;
+  tv: TTimeVal;
+  deviceMtu: LongInt;
+  flags: LongInt;
+  enableCanFd: Integer;
+  addr: tsockaddr_can;
+begin
+  // Initialize the result.
+  Result := CANCOMM_FALSE;
+  // Only continue with a valid parameters.
+  if (Context <> nil) and (Device <> nil) then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Set positive result at this point and negate upon error detection.
+    Result := CANCOMM_TRUE;
+    // Make sure we are not already connected to a CAN device.
+    CanCommDisconnect(Context);
+    // Create an ifreq structure for passing data in and out of ioctl. Reset the
+    // ifr_mtu and and ifr_ifindex elements. Then set all bytes of the interface name to
+    // the \0 string termination. Then copy over all but the last byte, to make sure the
+    // last byte is always also a \0 string termination.
+    ifr.ifr_mtu := 0;
+    ifr.ifr_ifindex := 0;
+    FillChar(ifr.ifr_name, IFNAMSIZ, 0);
+    Move(Device^, ifr.ifr_name, IFNAMSIZ - 1);
+    // Get current system time.
+    tv.tv_sec := 0;
+    tv.tv_usec := 0;
+    if fpgettimeofday(@tv, nil) = 0 then
+    begin
+      // Convert the current time to microseconds and store it as the connection start
+      // time. Needed for zero based timestamp.
+      currentCtxPtr^.ConnectTime := (Int64(tv.tv_sec) * 1000000) + tv.tv_usec;
+    end
+    else
+    begin
+      // Flag the error.
+      Result := CANCOMM_FALSE;
+    end;
+
+    // Only continue if all is okay so far.
+    if Result = CANCOMM_TRUE then
+    begin
+      // Get open socket descriptor.
+      currentCtxPtr^.Socket := socket(PF_CAN, SOCK_RAW, CAN_RAW);
+      if currentCtxPtr^.Socket < 0 then
+      begin
+        // Flag the error.
+        Result := CANCOMM_FALSE;
+      end;
+    end;
+
+    // Only continue if all is okay so far.
+    if Result = CANCOMM_TRUE then
+    begin
+      // Determine if the CAN device is configured for CAN classic or CAN FD mode. Do so
+      // by reading the MTU size of the CAN device. For CAN classic it will be CAN_MTU.
+      // For CAN FD it will be CANFD_MTU.
+      deviceMtu := CAN_MTU;
+      // Attempt to read the MTU value from the CAN device.
+      if FpIOCtl(currentCtxPtr^.Socket, TIOCtlRequest(SIOCGIFMTU), @ifr) >= 0 then
+      begin
+        // Only update the MTU value if it is a supported value.
+        if (ifr.ifr_mtu = CAN_MTU) or (ifr.ifr_mtu = CANFD_MTU) then
+        begin
+          deviceMtu := ifr.ifr_mtu;
+        end;
+      end;
+      // Use the MTU value to determine if the CAN device is operating in CAN classic or
+      // CAN FD mode. Note that the MTU value of the CAN device changes automatically to
+      // the value of CANFD_MTU, after the data bitrate was configured and the fd mode
+      // was turned on. Example:
+      //   ip link set can0 type can bitrate 500000 dbitrate 4000000 fd on
+      if deviceMtu = CANFD_MTU then
+      begin
+        currentCtxPtr^.FdEnabled := CANCOMM_TRUE;
+      end
+      else
+      begin
+        currentCtxPtr^.FdEnabled := CANCOMM_FALSE;
+      end;
+      // Attempt to switch socket into CAN FD mode, if the CAN device is configured for
+      // CAN FD.
+      if currentCtxPtr^.FdEnabled = CANCOMM_TRUE then
+      begin
+        enableCanFd := 1;
+        if setsockopt(currentCtxPtr^.Socket, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, @enableCanFd, SizeOf(enableCanFd)) <> 0 then
+        begin
+          // Could not switch the socket into CAN FD mode. Fall back to CAN classic
+          // operation.
+          currentCtxPtr^.FdEnabled := CANCOMM_FALSE;
+        end;
+      end;
+    end;
+
+    // Only continue if all is okay so far.
+    if Result = CANCOMM_TRUE then
+    begin
+      // Configure socket to work in non-blocking mode.
+      flags := fpFCntl(currentCtxPtr^.Socket, F_GETFL, 0);
+      if flags = -1 then
+      begin
+        flags := 0;
+      end;
+      if fpFCntl(currentCtxPtr^.Socket, F_SETFL, flags or O_NONBLOCK) = -1 then
+      begin
+        // Flag the error and close the socket.
+        fpClose(currentCtxPtr^.Socket);
+        currentCtxPtr^.Socket := CANCOMM_INVALID_SOCKET;
+        Result := CANCOMM_FALSE;
+      end;
+    end;
+
+    // Only continue if all is okay so far.
+    if Result = CANCOMM_TRUE then
+    begin
+      // Obtain interface index.
+      if fpIOCtl(currentCtxPtr^.Socket, SIOCGIFINDEX, @ifr) < 0 then
+      begin
+        // Flag the error and close the socket.
+        fpClose(currentCtxPtr^.Socket);
+        currentCtxPtr^.Socket := CANCOMM_INVALID_SOCKET;
+        Result := CANCOMM_FALSE;
+      end;
+    end;
+
+    // Only continue if all is okay so far.
+    if Result = CANCOMM_TRUE then
+    begin
+      // Set the address info.
+      addr.can_family := AF_CAN;
+      addr.can_ifindex := ifr.ifr_ifindex;
+      // Bind the socket.
+      if bind(currentCtxPtr^.Socket, @addr, SizeOf(addr)) < 0 then
+      begin
+        // Flag the error and close the socket.
+        fpClose(currentCtxPtr^.Socket);
+        currentCtxPtr^.Socket := CANCOMM_INVALID_SOCKET;
+        Result := CANCOMM_FALSE;
+      end;
+    end;
+  end;
+end; //*** end of CanCommConnect ***
 
 
 //***************************************************************************************

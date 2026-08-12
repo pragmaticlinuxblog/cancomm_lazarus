@@ -41,13 +41,23 @@ uses
 // Global constant declarations
 //***************************************************************************************
 const
-  AF_INET          = 2;
-  PF_CAN           = 29;
-  SOCK_RAW         = 3;
-  CAN_RAW          = 1;
-  SIOCGIFHWADDR    = $8927;
-  ARPHRD_CAN       = 280;
-  IFNAMSIZ         = 16;
+  PF_CAN             = 29;
+  AF_CAN             = PF_CAN;
+  SOCK_RAW           = 3;
+  CAN_RAW            = 1;
+  SIOCGIFMTU         = $8921;
+  SIOCGIFHWADDR      = $8927;
+  SIOCGIFINDEX       = $8933;
+  ARPHRD_CAN         = 280;
+  IFNAMSIZ           = 16;
+  CAN_MTU            = 16;   // sizeof(struct can_frame)
+  CANFD_MTU          = 72;   // sizeof(struct canfd_frame)
+  CAN_RAW_FD_FRAMES  = 5;
+  SOL_CAN_BASE       = 100 ;
+  SOL_CAN_RAW        = SOL_CAN_BASE + CAN_RAW;
+  F_GETFL            = 3;
+  F_SETFL            = 4;
+  O_NONBLOCK         = 2048;
 
 
 //***************************************************************************************
@@ -65,8 +75,6 @@ type
     ifa_next: pifaddrs;
     ifa_name: pchar;
     ifa_flags: cardinal;
-    // TODO ##Vg I don't think this padding is actually needed...test.
-    _padding: cardinal;     // explicit pad to match C struct layout
     ifa_addr: psockaddr;
     ifa_netmask: psockaddr;
     ifa_ifu: pointer;       // union treated as single pointer
@@ -75,9 +83,23 @@ type
 
   tifreq = record
     ifr_name: array[0..IFNAMSIZ - 1] of Char;
-    case Byte of
-      0: (ifr_hwaddr: Tsockaddr);
-      1: (_padding: array[0..23] of Byte);
+    case Integer of
+      0: (ifr_addr:      tsockaddr);
+      1: (ifr_dstaddr:   tsockaddr);
+      2: (ifr_broadaddr: tsockaddr);
+      3: (ifr_netmask:   tsockaddr);
+      4: (ifr_hwaddr:    tsockaddr);
+      5: (ifr_flags:     cshort);
+      6: (ifr_ifindex:   cint);
+      7: (ifr_metric:    cint);
+      8: (ifr_mtu:       cint);
+  end;
+
+  tsockaddr_can = record
+    can_family:   cushort;
+    can_ifindex:  cint;
+    can_rx_id:    culong;
+    can_tx_id:    culong;
   end;
 
 
@@ -90,6 +112,10 @@ procedure freeifaddrs(ifa: pifaddrs);
           cdecl; external 'c' name 'freeifaddrs';
 function  socket(domain, socktype, protocol: cint): cint;
           cdecl; external 'c' name 'socket';
+function setsockopt(sockfd: cint; level, optname: cint; optval: Pointer; optlen: cuint): cint;
+          cdecl; external 'c' name 'setsockopt';
+function  bind(sockfd: cint; addr: Pointer; addrlen: cuint): cint;
+          cdecl; external 'c' name 'bind';
 
 
 implementation
