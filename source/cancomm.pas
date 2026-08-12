@@ -87,14 +87,7 @@ function CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
          cdecl; external CANCOMM_LIBNAME name 'cancomm_connect';
 
 
-//***************************************************************************************
-// NAME:           CanCommDisconnect
-// PARAMETER:      Context CAN communication context.
-// DESCRIPTION:    Disconnects from the SocketCAN device.
-//
-//***************************************************************************************
 procedure CanCommDisconnect(Context: TCanComm);
-          cdecl; external CANCOMM_LIBNAME name 'cancomm_disconnect';
 
 
 //***************************************************************************************
@@ -250,6 +243,31 @@ begin
     currentCtxPtr := nil;
   end;
 end; //*** end of CanCommFree ***
+
+
+//***************************************************************************************
+// NAME:           CanCommDisconnect
+// PARAMETER:      Context CAN communication context.
+// DESCRIPTION:    Disconnects from the SocketCAN device.
+//
+//***************************************************************************************
+procedure CanCommDisconnect(Context: TCanComm);
+var
+  currentCtxPtr: PCanCommCtx;
+begin
+  // Only continue with a valid parameter.
+  if Context <> nil then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Only disconnect if actually connected.
+    if currentCtxPtr^.Socket <> CANCOMM_INVALID_SOCKET then
+    begin
+      FpClose(currentCtxPtr^.Socket);
+      currentCtxPtr^.Socket := CANCOMM_INVALID_SOCKET;
+    end;
+  end;
+end; //*** end of CanCommDisconnect ***
 
 
 //***************************************************************************************
