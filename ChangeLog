@@ -1,4 +1,10 @@
 -----------------------------------------------------------------------------------------
+2026-08-12 PragmaticLinux <info@pragmaticlinux.com>
+
+* Removed dependency on external LibCanComm shared library.
+* Release of version 1.1.0.
+
+-----------------------------------------------------------------------------------------
 2022-04-05 PragmaticLinux <info@pragmaticlinux.com>
 
 * Release of version 1.0.0.
