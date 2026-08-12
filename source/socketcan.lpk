@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="socketcan"/>
     <Type Value="RunAndDesignTime"/>
     <Author Value="PragmaticLinux"/>
@@ -13,7 +13,7 @@
     <Description Value="CAN communication component based on the SocketCAN functionality of the Linux kernel."/>
     <License Value="FPC modified LGPL Version 2"/>
     <Version Major="1"/>
-    <Files Count="3">
+    <Files Count="4">
       <Item1>
         <Filename Value="cancomm.pas"/>
         <UnitName Value="CanComm"/>
@@ -27,7 +27,12 @@
         <Filename Value="candevices.pas"/>
         <UnitName Value="CanDevices"/>
       </Item3>
+      <Item4>
+        <Filename Value="canunix.pas"/>
+        <UnitName Value="CanUnix"/>
+      </Item4>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="IDEIntf"/>

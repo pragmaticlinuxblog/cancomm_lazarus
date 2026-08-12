@@ -108,6 +108,8 @@ implementation
 //***************************************************************************************
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Create the CAN socket. Alternatively, you can add it to your form from the component
   // palette.
   CanSocket := TCanSocket.Create(Self);
@@ -173,6 +175,8 @@ end; //*** end of PopulateDevices ***
 //***************************************************************************************
 procedure TMainForm.BtnConnectClick(Sender: TObject);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Currently not connected?
   if not CanSocket.Connected then
   begin
@@ -203,6 +207,8 @@ procedure TMainForm.BtnTransmitClick(Sender: TObject);
 var
   Msg: TCanMsg;
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Validate the entered transmit data on the user interface and correct it, if needed.
   VerifyTransmitInfo;
   // Attempt to automatically connect, if not yet connected.
@@ -245,6 +251,8 @@ end; //*** end of BtnTransmitClick ***
 //***************************************************************************************
 procedure TMainForm.CanMsgTransmitted(Sender: TObject; constref Msg: TCanMsg);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Show the CAN message in the log.
   MmoLog.Lines.Add(CanSocket.FormatMsg(Msg));
 end; //*** end of CanMsgTransmitted ***
@@ -259,6 +267,8 @@ end; //*** end of CanMsgTransmitted ***
 //***************************************************************************************
 procedure TMainForm.CanMsgReceived(Sender: TObject; constref Msg: TCanMsg);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Show the CAN message in the log.
   MmoLog.Lines.Add(CanSocket.FormatMsg(Msg));
 end; //*** end of CanMsgReceived ***
@@ -272,6 +282,8 @@ end; //*** end of CanMsgReceived ***
 //***************************************************************************************
 procedure TMainForm.CanConnected(Sender: TObject);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Update the user interface.
   BtnConnect.Caption := 'Disconnect';
   CbbDevices.Enabled := False;
@@ -287,6 +299,8 @@ end; //*** end of CanConnected ***
 //***************************************************************************************
 procedure TMainForm.CanDisconnected(Sender: TObject);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
   // Update the user interface.
   BtnConnect.Caption := 'Connect';
   CbbDevices.Enabled := True;
@@ -304,6 +318,9 @@ end; //*** end of CanDisconnected ***
 //***************************************************************************************
 procedure TMainForm.EditKeyPressHexOnly(Sender: TObject; var Key: Char);
 begin
+  // Suppress warning due to unused parameter.
+  Sender := Sender;
+
   if not (Key In ['0'..'9', 'a'..'f', 'A'..'F', #8]) then // #8 = backspace
   begin
     // Ignore it

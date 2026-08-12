@@ -19,8 +19,6 @@ The following requirements need to be met, before you can use the `TCanSocket` c
 
 1. Lazarus is installed on your Linux system. The following article explains this step-by-step:
     * [How to install the Lazarus IDE on Linux](https://www.pragmaticlinux.com/2021/06/how-to-install-the-lazarus-ide-on-linux/)
-2. The [LibCanComm](https://github.com/pragmaticlinuxblog/cancomm) shared library (including its development package) is installed on your Linux system:
-    * [Install the LibCanComm shared library on Linux](https://github.com/pragmaticlinuxblog/cancomm/releases)
 3. You already configured and brought your CAN adapter online. If not, follow one of these tutorials:
     * [How to create a virtual CAN interface on Linux](https://www.pragmaticlinux.com/2021/10/how-to-create-a-virtual-can-interface-on-linux/)
     * [Automatically bring up a SocketCAN interface on boot](https://www.pragmaticlinux.com/2021/07/automatically-bring-up-a-socketcan-interface-on-boot/)
