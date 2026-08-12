@@ -41,9 +41,6 @@ uses
 // Global constant declarations
 //***************************************************************************************
 const
-  // Name of the external library.
-  // TODO ##Vg Can be removed once the rework is done.
-  CANCOMM_LIBNAME = 'cancomm';
   // Boolean true value.
   CANCOMM_TRUE = 1;
   // Boolean false value.
@@ -70,40 +67,14 @@ function  CanCommNew: TCanComm;
 procedure CanCommFree(Context: TCanComm);
 function  CanCommConnect(Context: TCanComm; Device: PAnsiChar): Byte;
 procedure CanCommDisconnect(Context: TCanComm);
-function CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
-                         PData: PByte; Flags: Byte; out Timestamp: QWord): Byte;
-
-
-//***************************************************************************************
-// NAME:           CanCommReceive
-// PARAMETER:      Context CAN communication context.
-//                 Id Variable where the CAN message identifier is stored.
-//                 Ext Variable where the CAN identifier type is stored. CANCOMM_FALSE
-//                 for an 11-bit message identifier, CANCOMM_TRUE for 29-bit.
-//                 Len Variable where the number of CAN message data bytes is stored.
-//                 PData Pointer to array where the data bytes are stored.
-//                 Flags Variable where the bit flags are stored for providing
-//                 additional information about the received message:
-//                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
-//                                                  classic.
-//                         CANCOMM_FLAG_CANERR_MSG - The message is a CAN error frame.
-//                 Timestamp Variable where the timestamp (microseconds) of the
-//                 message is stored.
-// RETURN VALUE:   CANCOMM_TRUE if a new message was received and copied. CANCOMM_FALSE
-//                 otherwise.
-// DESCRIPTION:    Reads a possibly received CAN message or CAN eror frame in a
-//                 non-blocking manner.
-//
-//***************************************************************************************
-function CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
-                        out Len: Byte; PData: PByte; out Flags: Byte;
-                        out Timestamp: QWord): Byte;
-         cdecl; external CANCOMM_LIBNAME name 'cancomm_receive';
-
-
+function  CanCommTransmit(Context: TCanComm; Id: LongWord; Ext: Byte; Len: Byte;
+                          PData: PByte; Flags: Byte; out Timestamp: QWord): Byte;
+function  CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
+                         out Len: Byte; PData: PByte; out Flags: Byte;
+                         out Timestamp: QWord): Byte;
 // API for obtaining CAN device names on the system (can0, vcan0, etc.).
-function CanCommDevicesBuildList(Context: TCanComm): Byte;
-function CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
+function  CanCommDevicesBuildList(Context: TCanComm): Byte;
+function  CanCommDevicesName(Context: TCanComm; Index: Byte): PAnsiChar;
 
 
 implementation
@@ -483,6 +454,112 @@ begin
     end;
   end;
 end; //*** end of CanCommTransmit ***
+
+
+//***************************************************************************************
+// NAME:           CanCommReceive
+// PARAMETER:      Context CAN communication context.
+//                 Id Variable where the CAN message identifier is stored.
+//                 Ext Variable where the CAN identifier type is stored. CANCOMM_FALSE
+//                 for an 11-bit message identifier, CANCOMM_TRUE for 29-bit.
+//                 Len Variable where the number of CAN message data bytes is stored.
+//                 PData Pointer to array where the data bytes are stored.
+//                 Flags Variable where the bit flags are stored for providing
+//                 additional information about the received message:
+//                         CANCOMM_FLAG_CANFD_MSG - The message is CAN FD and not CAN
+//                                                  classic.
+//                         CANCOMM_FLAG_CANERR_MSG - The message is a CAN error frame.
+//                 Timestamp Variable where the timestamp (microseconds) of the
+//                 message is stored.
+// RETURN VALUE:   CANCOMM_TRUE if a new message was received and copied. CANCOMM_FALSE
+//                 otherwise.
+// DESCRIPTION:    Reads a possibly received CAN message or CAN eror frame in a
+//                 non-blocking manner.
+//
+//***************************************************************************************
+function CanCommReceive(Context: TCanComm; out Id: LongWord; out Ext: Byte;
+                        out Len: Byte; PData: PByte; out Flags: Byte;
+                        out Timestamp: QWord): Byte;
+var
+  currentCtxPtr: PCanCommCtx;
+  canRxFrame: tcanfd_frame;
+  frameSize: TSize;
+  idx: Byte;
+  tv: TTimeVal;
+begin
+  // Initialize the result.
+  Result := CANCOMM_FALSE;
+  // Initialize the receptin frame.
+  canRxFrame := Default(tcanfd_frame);
+  // Only continue with a valid parameters.
+  if (Context <> nil) and (PData <> nil) then
+  begin
+    // Cast the opaque pointer to its non-opaque counter part.
+    currentCtxPtr := PCanCommCtx(Context);
+    // Only receive if actually connected.
+    if currentCtxPtr^.Socket <> CANCOMM_INVALID_SOCKET then
+    begin
+      // Attempt to read the next frame from the queue.
+      frameSize := FpRead(currentCtxPtr^.Socket, @canRxFrame, CANFD_MTU);
+      // CAN FD or CAN classic frames are the only valid ones.
+      if (frameSize = CANFD_MTU) or (frameSize = CAN_MTU) then
+      begin
+        // Ignore remote frames. Pretty much no one actually uses these.
+        if (canRxFrame.can_id and CAN_RTR_FLAG) = 0 then
+        begin
+          // Reset the bit flags.
+          Flags := 0;
+          // Obtain the timestamp of the reception event.
+          Timestamp := 0;
+          tv := Default(TTimeVal);
+          if FpIOCtl(currentCtxPtr^.Socket, TIOCtlRequest(SIOCGSTAMP), @tv) = 0 then
+          begin
+            // Convert the timestamp to microseconds.
+            Timestamp := (Int64(tv.tv_sec) * 1000000) + tv.tv_usec;
+            // Make the timestamp relative to the connection time.
+            Timestamp := Timestamp - currentCtxPtr^.ConnectTime;
+          end;
+          // Was it an error frame?
+          if (canRxFrame.can_id and CAN_ERR_FLAG) <> 0 then
+          begin
+            // Store error frame info.
+            Flags := flags or CANCOMM_FLAG_CANERR_MSG;
+            Id := 0;
+            Ext := CANCOMM_FALSE;
+            Len := 0;
+          end
+          // It was a regular data frame. Either CAN FD or CAN classic.
+          else
+          begin
+            // Was it a CAN FD frame?
+            if frameSize = CANFD_MTU then
+            begin
+              // Flag the frame as a CAN FD frame for the caller.
+              Flags := Flags or CANCOMM_FLAG_CANFD_MSG;
+            end;
+            // Copy the CAN data frame.
+            if (canRxFrame.can_id and CAN_EFF_FLAG) <> 0 then
+            begin
+              Ext := CANCOMM_TRUE;
+            end
+            else
+            begin
+              Ext := CANCOMM_FALSE;
+            end;
+            Id := canRxFrame.can_id and (not CAN_EFF_FLAG);
+            Len := canRxFrame.len;
+            for idx := 0 to (canRxFrame.len - 1) do
+            begin
+              PData[idx] := canRxFrame.data[idx];
+            end;
+          end;
+          // Frame successfully read. Update the result accordingly.
+          Result := CANCOMM_TRUE;
+        end;
+      end;
+    end;
+  end;
+end; //*** end of CanCommReceive ***
 
 
 //***************************************************************************************

@@ -45,6 +45,7 @@ const
   AF_CAN             = PF_CAN;
   SOCK_RAW           = 3;
   CAN_RAW            = 1;
+  SIOCGSTAMP         = $8906;
   SIOCGIFMTU         = $8921;
   SIOCGIFHWADDR      = $8927;
   SIOCGIFINDEX       = $8933;
@@ -62,6 +63,8 @@ const
   CAN_MAX_DLEN       = 8;
   CANFD_BRS          = $01;
   CAN_EFF_FLAG       = $80000000;
+  CAN_RTR_FLAG       = $40000000;
+  CAN_ERR_FLAG       = $20000000;
 
 
 //***************************************************************************************
